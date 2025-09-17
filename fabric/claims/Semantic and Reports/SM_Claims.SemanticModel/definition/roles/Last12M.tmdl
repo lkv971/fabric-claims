@@ -1,0 +1,7 @@
+role Last12M
+	modelPermission: read
+
+	tablePermission Claims = [Date] >= TODAY() - 365
+
+	annotation PBI_Id = 1a0499bb10c140c28af75d5b8fd33367
+

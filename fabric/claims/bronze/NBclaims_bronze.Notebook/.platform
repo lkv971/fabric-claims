@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "NBclaims_bronze",
+    "description": "Internal notebook for initial data quality processing. Splits raw data into valid and invalid streams."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "12c5a149-d5ff-a831-4c0b-150461be9edc"
+  }
+}

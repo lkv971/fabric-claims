@@ -1,0 +1,1441 @@
+{
+  "name": "{{Dataset_Name}}",
+  "compatibilityLevel": 1604,
+  "model": {
+    "name": "{{Dataset_Name}}",
+    "culture": "en-US",
+    "collation": "Latin1_General_100_BIN2_UTF8",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "Claims",
+        "sourceLineageTag": "[Health].[Claims]",
+        "columns": [
+          {
+            "name": "ClaimID",
+            "dataType": "string",
+            "sourceColumn": "ClaimID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientID",
+            "dataType": "string",
+            "sourceColumn": "PatientID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProviderID",
+            "dataType": "string",
+            "sourceColumn": "ProviderID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimDate",
+            "dataType": "dateTime",
+            "sourceColumn": "ClaimDate",
+            "formatString": "General Date",
+            "sourceProviderType": "date",
+            "sourceLineageTag": "ClaimDate",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimAmount",
+            "dataType": "double",
+            "sourceColumn": "ClaimAmount",
+            "sourceProviderType": "float",
+            "sourceLineageTag": "ClaimAmount",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ]
+          },
+          {
+            "name": "DiagnosisCode",
+            "dataType": "string",
+            "sourceColumn": "DiagnosisCode",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "DiagnosisCode",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProcedureCode",
+            "dataType": "string",
+            "sourceColumn": "ProcedureCode",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProcedureCode",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimStatus",
+            "dataType": "string",
+            "sourceColumn": "ClaimStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimType",
+            "dataType": "string",
+            "sourceColumn": "ClaimType",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimType",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimSubmissionMethod",
+            "dataType": "string",
+            "sourceColumn": "ClaimSubmissionMethod",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimSubmissionMethod",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "Claims",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "Dates",
+        "sourceLineageTag": "[Health].[Dates]",
+        "columns": [
+          {
+            "name": "DateID",
+            "dataType": "int64",
+            "sourceColumn": "DateID",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "DateID",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "formatString": "General Date",
+            "sourceProviderType": "date",
+            "sourceLineageTag": "Date",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "Year",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Month",
+            "dataType": "int64",
+            "sourceColumn": "Month",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "Month",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Day",
+            "dataType": "int64",
+            "sourceColumn": "Day",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "Day",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "MonthName",
+            "dataType": "string",
+            "sourceColumn": "MonthName",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "MonthName",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "DayName",
+            "dataType": "string",
+            "sourceColumn": "DayName",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "DayName",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "Dates",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctClaimStatus",
+        "sourceLineageTag": "[Health].[DistinctClaimStatus]",
+        "columns": [
+          {
+            "name": "ClaimStatus",
+            "dataType": "string",
+            "sourceColumn": "ClaimStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctClaimStatus",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctClaimType",
+        "sourceLineageTag": "[Health].[DistinctClaimType]",
+        "columns": [
+          {
+            "name": "ClaimType",
+            "dataType": "string",
+            "sourceColumn": "ClaimType",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimType",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctClaimType",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctEmploymentStatus",
+        "sourceLineageTag": "[Health].[DistinctEmploymentStatus]",
+        "columns": [
+          {
+            "name": "PatientEmploymentStatus",
+            "dataType": "string",
+            "sourceColumn": "PatientEmploymentStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientEmploymentStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctEmploymentStatus",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctGenders",
+        "sourceLineageTag": "[Health].[DistinctGenders]",
+        "columns": [
+          {
+            "name": "PatientGender",
+            "dataType": "string",
+            "sourceColumn": "PatientGender",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientGender",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctGenders",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctMaritalStatus",
+        "sourceLineageTag": "[Health].[DistinctMaritalStatus]",
+        "columns": [
+          {
+            "name": "PatientMaritalStatus",
+            "dataType": "string",
+            "sourceColumn": "PatientMaritalStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientMaritalStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctMaritalStatus",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctSpecialities",
+        "sourceLineageTag": "[Health].[DistinctSpecialities]",
+        "columns": [
+          {
+            "name": "ProviderSpecialty",
+            "dataType": "string",
+            "sourceColumn": "ProviderSpecialty",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderSpecialty",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctSpecialities",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "DistinctSubmissionMethod",
+        "sourceLineageTag": "[Health].[DistinctSubmissionMethod]",
+        "columns": [
+          {
+            "name": "ClaimSubmissionMethod",
+            "dataType": "string",
+            "sourceColumn": "ClaimSubmissionMethod",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimSubmissionMethod",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "DistinctSubmissionMethod",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "IngestionLogs",
+        "sourceLineageTag": "[Health].[IngestionLogs]",
+        "columns": [
+          {
+            "name": "IngestionID",
+            "sourceColumn": "IngestionID",
+            "sourceProviderType": "uniqueidentifier",
+            "sourceLineageTag": "IngestionID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PipelineName",
+            "dataType": "string",
+            "sourceColumn": "PipelineName",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PipelineName",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Layer",
+            "dataType": "string",
+            "sourceColumn": "Layer",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "Layer",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "TargetObject",
+            "dataType": "string",
+            "sourceColumn": "TargetObject",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "TargetObject",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Status",
+            "dataType": "string",
+            "sourceColumn": "Status",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "Status",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "FinishedAtUTC",
+            "dataType": "dateTime",
+            "sourceColumn": "FinishedAtUTC",
+            "formatString": "General Date",
+            "sourceProviderType": "datetime2",
+            "sourceLineageTag": "FinishedAtUTC",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "WatermarkBefore",
+            "dataType": "string",
+            "sourceColumn": "WatermarkBefore",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "WatermarkBefore",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "WatermarkAfter",
+            "dataType": "string",
+            "sourceColumn": "WatermarkAfter",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "WatermarkAfter",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "RowsWritten",
+            "dataType": "int64",
+            "sourceColumn": "RowsWritten",
+            "formatString": "0",
+            "sourceProviderType": "bigint",
+            "sourceLineageTag": "RowsWritten",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ErrorMessage",
+            "dataType": "string",
+            "sourceColumn": "ErrorMessage",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ErrorMessage",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "RunID",
+            "dataType": "string",
+            "sourceColumn": "RunID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "RunID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "BatchID",
+            "dataType": "string",
+            "sourceColumn": "BatchID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "BatchID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "TriggerType",
+            "dataType": "string",
+            "sourceColumn": "TriggerType",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "TriggerType",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "IngestionLogs",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "Patients",
+        "sourceLineageTag": "[Health].[Patients]",
+        "columns": [
+          {
+            "name": "PatientID",
+            "dataType": "string",
+            "sourceColumn": "PatientID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientAge",
+            "dataType": "int64",
+            "sourceColumn": "PatientAge",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "PatientAge",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientGender",
+            "dataType": "string",
+            "sourceColumn": "PatientGender",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientGender",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientMaritalStatus",
+            "dataType": "string",
+            "sourceColumn": "PatientMaritalStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientMaritalStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientEmploymentStatus",
+            "dataType": "string",
+            "sourceColumn": "PatientEmploymentStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientEmploymentStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "Patients",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "Providers",
+        "sourceLineageTag": "[Health].[Providers]",
+        "columns": [
+          {
+            "name": "ProviderID",
+            "dataType": "string",
+            "sourceColumn": "ProviderID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProviderSpecialty",
+            "dataType": "string",
+            "sourceColumn": "ProviderSpecialty",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderSpecialty",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProviderLocation",
+            "dataType": "string",
+            "sourceColumn": "ProviderLocation",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderLocation",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "Providers",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "StagingClaims",
+        "sourceLineageTag": "[Health].[StagingClaims]",
+        "columns": [
+          {
+            "name": "ClaimID",
+            "dataType": "string",
+            "sourceColumn": "ClaimID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientID",
+            "dataType": "string",
+            "sourceColumn": "PatientID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProviderID",
+            "dataType": "string",
+            "sourceColumn": "ProviderID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimDate",
+            "dataType": "dateTime",
+            "sourceColumn": "ClaimDate",
+            "formatString": "General Date",
+            "sourceProviderType": "date",
+            "sourceLineageTag": "ClaimDate",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimAmount",
+            "dataType": "double",
+            "sourceColumn": "ClaimAmount",
+            "sourceProviderType": "decimal",
+            "sourceLineageTag": "ClaimAmount",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ]
+          },
+          {
+            "name": "DiagnosisCode",
+            "dataType": "string",
+            "sourceColumn": "DiagnosisCode",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "DiagnosisCode",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProcedureCode",
+            "dataType": "string",
+            "sourceColumn": "ProcedureCode",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProcedureCode",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimStatus",
+            "dataType": "string",
+            "sourceColumn": "ClaimStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimType",
+            "dataType": "string",
+            "sourceColumn": "ClaimType",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimType",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ClaimSubmissionMethod",
+            "dataType": "string",
+            "sourceColumn": "ClaimSubmissionMethod",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ClaimSubmissionMethod",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "StagingClaims",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "StagingDates",
+        "sourceLineageTag": "[Health].[StagingDates]",
+        "columns": [
+          {
+            "name": "DateID",
+            "dataType": "int64",
+            "sourceColumn": "DateID",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "DateID",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "formatString": "General Date",
+            "sourceProviderType": "date",
+            "sourceLineageTag": "Date",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "Year",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Month",
+            "dataType": "int64",
+            "sourceColumn": "Month",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "Month",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "Day",
+            "dataType": "int64",
+            "sourceColumn": "Day",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "Day",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "MonthName",
+            "dataType": "string",
+            "sourceColumn": "MonthName",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "MonthName",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "DayName",
+            "dataType": "string",
+            "sourceColumn": "DayName",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "DayName",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "StagingDates",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "StagingPatients",
+        "sourceLineageTag": "[Health].[StagingPatients]",
+        "columns": [
+          {
+            "name": "PatientID",
+            "dataType": "string",
+            "sourceColumn": "PatientID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientAge",
+            "dataType": "int64",
+            "sourceColumn": "PatientAge",
+            "formatString": "0",
+            "sourceProviderType": "int",
+            "sourceLineageTag": "PatientAge",
+            "summarizeBy": "sum",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientGender",
+            "dataType": "string",
+            "sourceColumn": "PatientGender",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientGender",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientMaritalStatus",
+            "dataType": "string",
+            "sourceColumn": "PatientMaritalStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientMaritalStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "PatientEmploymentStatus",
+            "dataType": "string",
+            "sourceColumn": "PatientEmploymentStatus",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "PatientEmploymentStatus",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "StagingPatients",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      },
+      {
+        "name": "StagingProviders",
+        "sourceLineageTag": "[Health].[StagingProviders]",
+        "columns": [
+          {
+            "name": "ProviderID",
+            "dataType": "string",
+            "sourceColumn": "ProviderID",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderID",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProviderSpecialty",
+            "dataType": "string",
+            "sourceColumn": "ProviderSpecialty",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderSpecialty",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "ProviderLocation",
+            "dataType": "string",
+            "sourceColumn": "ProviderLocation",
+            "sourceProviderType": "varchar",
+            "sourceLineageTag": "ProviderLocation",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "{{Partition_Name}}",
+            "mode": "directLake",
+            "source": {
+              "type": "entity",
+              "entityName": "StagingProviders",
+              "expressionSource": "DatabaseQuery",
+              "schemaName": "Health"
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "IsTableInBiModel",
+            "value": "False"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "3ef52fc4560f7dd4d7664c38fc406463",
+        "fromTable": "Claims",
+        "fromColumn": "PatientID",
+        "toTable": "Patients",
+        "toColumn": "PatientID",
+        "relyOnReferentialIntegrity": true,
+        "securityFilteringBehavior": "none"
+      },
+      {
+        "name": "bae4e31dc12fcee9389c2d66a7e9ceb0",
+        "fromTable": "Claims",
+        "fromColumn": "ProviderID",
+        "toTable": "Providers",
+        "toColumn": "ProviderID",
+        "relyOnReferentialIntegrity": true,
+        "securityFilteringBehavior": "none"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "DatabaseQuery",
+        "kind": "m",
+        "expression": "let\n    database = {{TDS_Endpoint}}\nin\n    database\n"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "SourceLineageTagType",
+        "value": "DatabaseFullyQualifiedName"
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+table Providers
+	lineageTag: ddca8d68-02e4-4c0b-82c6-0b368cb85e05
+	sourceLineageTag: [Health].[Providers]
+
+	column 'Provider ID'
+		dataType: string
+		sourceProviderType: varchar(100)
+		lineageTag: 787a3898-8914-4a10-a4c5-b7e271e0d905
+		sourceLineageTag: ProviderID
+		summarizeBy: none
+		sourceColumn: ProviderID
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Specialty
+		dataType: string
+		sourceProviderType: varchar(100)
+		lineageTag: bb939fe0-0e8d-454f-a209-de1720f4552c
+		sourceLineageTag: ProviderSpecialty
+		summarizeBy: none
+		sourceColumn: ProviderSpecialty
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Location
+		dataType: string
+		sourceProviderType: varchar(100)
+		lineageTag: ef64d46a-60b5-4f91-b136-14919f68f96a
+		sourceLineageTag: ProviderLocation
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: ProviderLocation
+
+		changedProperty = Name
+
+		changedProperty = DataCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Providers = entity
+		mode: directLake
+		source
+			entityName: Providers
+			schemaName: Health
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

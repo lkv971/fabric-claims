@@ -1,0 +1,62 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/variableLibrary/definition/valueSet/1.0.0/schema.json",
+  "name": "Prod",
+  "variableOverrides": [
+    {
+      "name": "Folder_connection_id",
+      "value": "79153c79-1c39-4ee4-ba98-bd49c5317135"
+    },
+    {
+      "name": "LH_bronze_id",
+      "value": "8d48d34c-b3ee-4e6c-a7e0-eebd6f677315"
+    },
+    {
+      "name": "NB_bronze_id",
+      "value": "f0636ad4-0cfd-4b2c-8b87-01229ce0b83e"
+    },
+    {
+      "name": "NB_bronze_update",
+      "value": "d4a5470a-ec30-44ae-b932-317f377c751e"
+    },
+    {
+      "name": "PL_bronze_id",
+      "value": "4f54067a-cc86-4671-b9b7-1083857b9f1b"
+    },
+    {
+      "name": "LH_silver_id",
+      "value": "7b515909-fee2-4a54-a8b4-9de99825365a"
+    },
+    {
+      "name": "NB_silver_id",
+      "value": "5a57d3db-9e92-43fa-82f8-c4c1260921eb"
+    },
+    {
+      "name": "NB_silver_update",
+      "value": "5820726d-35ce-4047-bcb0-f81ac17b844d"
+    },
+    {
+      "name": "PL_silver_id",
+      "value": "c194116e-dac6-4e35-b922-5f129b541fc7"
+    },
+    {
+      "name": "PL_gold_id",
+      "value": "c521782d-5722-4edf-b7a9-8dfdf858ec24"
+    },
+    {
+      "name": "Workspace_id",
+      "value": "b474edf8-b109-45c6-8878-c2b82c794c5a"
+    },
+    {
+      "name": "Bronze_Tables_Root",
+      "value": "abfss://Claims_Prod@onelake.dfs.fabric.microsoft.com/LHclaims_bronze.Lakehouse/Tables"
+    },
+    {
+      "name": "WH_bronze_id",
+      "value": "0a164567-d398-4410-94d7-15b5e5ae0183"
+    },
+    {
+      "name": "SQL_endpoints",
+      "value": "mpyijd7bpuruxf35j6dzo37vp4-7dwxjnajwhdelcdyyk4cy6kmli.datawarehouse.fabric.microsoft.com"
+    }
+  ]
+}

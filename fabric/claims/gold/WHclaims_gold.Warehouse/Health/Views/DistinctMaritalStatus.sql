@@ -1,0 +1,6 @@
+-- Auto Generated (Do not modify) 65557FAB9886D7FD464306FAD5FEC0B4AAE2C108DB847EB07F32C7E9F93A3122
+
+
+CREATE VIEW Health.DistinctMaritalStatus AS
+SELECT DISTINCT(PatientMaritalStatus)
+FROM Health.Patients;

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/variableLibrary/definition/variables/1.0.0/schema.json",
+  "variables": [
+    {
+      "name": "LH_bronze_id",
+      "note": "",
+      "type": "String",
+      "value": "af5da6f5-d43f-46c3-8924-7e10fdeaca18"
+    },
+    {
+      "name": "LH_silver_id",
+      "note": "",
+      "type": "String",
+      "value": "b98cd8e8-9a67-459f-9eae-c4311796500b"
+    },
+    {
+      "name": "WH_bronze_id",
+      "note": "",
+      "type": "String",
+      "value": "73d7f0f4-fa1b-47ca-a2c1-06db295a29d9"
+    },
+    {
+      "name": "Workspace_id",
+      "note": "",
+      "type": "String",
+      "value": "d6cf1ffb-bc19-4130-bfa1-27701036ae71"
+    },
+    {
+      "name": "Folder_connection_id",
+      "note": "",
+      "type": "String",
+      "value": "c50a994c-b9c4-4209-b30f-a91e7d799c16"
+    },
+    {
+      "name": "NB_bronze_id",
+      "note": "",
+      "type": "String",
+      "value": "61be9edc-1504-4c0b-a831-d5ff12c5a149"
+    },
+    {
+      "name": "NB_silver_id",
+      "note": "",
+      "type": "String",
+      "value": "0edabd98-e7a5-4473-abbc-ca11708c0962"
+    },
+    {
+      "name": "NB_bronze_update",
+      "note": "",
+      "type": "String",
+      "value": "8ff4b81b-56d3-4012-af68-e7e42f75bfdd"
+    },
+    {
+      "name": "NB_silver_update",
+      "note": "",
+      "type": "String",
+      "value": "a90df345-d50f-4637-8421-630ea3bb98b8"
+    },
+    {
+      "name": "SQL_endpoints",
+      "note": "",
+      "type": "String",
+      "value": "mpyijd7bpuruxf35j6dzo37vp4-7mp47vqzxqyedp5be5ybanvooe.datawarehouse.fabric.microsoft.com"
+    },
+    {
+      "name": "PL_gold_id",
+      "note": "",
+      "type": "String",
+      "value": "a1b3439b-0003-4681-9574-6baf61922eb8"
+    },
+    {
+      "name": "PL_silver_id",
+      "note": "",
+      "type": "String",
+      "value": "25d693d1-aa98-49cd-80ee-f6f00cdafd3a"
+    },
+    {
+      "name": "PL_bronze_id",
+      "note": "",
+      "type": "String",
+      "value": "1e793d6a-8d3f-45e4-bfb3-9603e6cf5be2"
+    },
+    {
+      "name": "Bronze_Tables_Root",
+      "note": "",
+      "type": "String",
+      "value": "abfss://Claims@onelake.dfs.fabric.microsoft.com/LHclaims_bronze.Lakehouse/Tables"
+    }
+  ]
+}

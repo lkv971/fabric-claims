@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Lakehouse",
+    "displayName": "LHclaims_bronze",
+    "description": "Raw landing zone for claims data. Schema-on-read; structure may change. Used for initial ingestion and data quality checks. Not for business reporting."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "fdeaca18-7e10-8924-46c3-d43faf5da6f5"
+  }
+}

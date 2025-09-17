@@ -1,0 +1,86 @@
+table Patients
+	lineageTag: 53654c27-30d3-413c-92c4-20be4102079d
+	sourceLineageTag: [Health].[Patients]
+
+	measure 'Average Age' = AVERAGE(Patients[Age])
+		displayFolder: Patient Measures
+		lineageTag: 58774b80-a62d-4292-8e05-8e739b67b13f
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Patient ID'
+		dataType: string
+		sourceProviderType: varchar(100)
+		lineageTag: e242176e-e447-4e9c-9e38-5f775c97fc80
+		sourceLineageTag: PatientID
+		summarizeBy: none
+		sourceColumn: PatientID
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Age
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 6c34997b-824d-4ccc-89a3-92e723ae1cdb
+		sourceLineageTag: PatientAge
+		summarizeBy: none
+		sourceColumn: PatientAge
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gender
+		dataType: string
+		sourceProviderType: varchar(10)
+		lineageTag: 4980c93b-0315-4e5d-bbf8-6661a09cfb7b
+		sourceLineageTag: PatientGender
+		summarizeBy: none
+		sourceColumn: PatientGender
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Marital Status'
+		dataType: string
+		sourceProviderType: varchar(20)
+		lineageTag: 013b39b2-c27e-42ea-b2fd-7096f5a8fba7
+		sourceLineageTag: PatientMaritalStatus
+		summarizeBy: none
+		sourceColumn: PatientMaritalStatus
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Employment Status'
+		dataType: string
+		sourceProviderType: varchar(30)
+		lineageTag: 6656502e-836e-4882-a423-eda81ebc154a
+		sourceLineageTag: PatientEmploymentStatus
+		summarizeBy: none
+		sourceColumn: PatientEmploymentStatus
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Patients = entity
+		mode: directLake
+		source
+			entityName: Patients
+			schemaName: Health
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

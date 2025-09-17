@@ -1,0 +1,32 @@
+table 'Claim Status'
+	lineageTag: c1080a9f-6bf3-48cf-b161-d178e680518a
+
+	calculationGroup
+		precedence: 1
+
+		calculationItem All = SELECTEDMEASURE()
+
+		calculationItem Approved = CALCULATE(SELECTEDMEASURE(), KEEPFILTERS(Claims[Status] = "Approved"))
+
+		calculationItem Denied = CALCULATE(SELECTEDMEASURE(), KEEPFILTERS(Claims[Status] = "Denied"))
+
+		calculationItem Pending = CALCULATE(SELECTEDMEASURE(), KEEPFILTERS(Claims[Status] = "Pending"))
+
+	column 'Claim Status'
+		dataType: string
+		lineageTag: b552578a-bf0d-4295-bbd6-75a006102766
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		formatString: 0
+		lineageTag: 598dc8c4-ec66-4de8-a313-c47cde49c939
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

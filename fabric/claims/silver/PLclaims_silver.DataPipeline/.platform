@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "PLclaims_silver",
+    "description": "Production transformation pipeline. Executes data quality checks and applies business logic to create the curated Silver layer model."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "0cdafd3a-f6f0-80ee-49cd-aa9825d693d1"
+  }
+}

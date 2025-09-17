@@ -1,0 +1,4 @@
+-- Auto Generated (Do not modify) 39E40A8D563CF73867D73C560A0838A61A4E9E5DA2093617FD8969CF2E4DE710
+CREATE VIEW Health.DistinctSubmissionMethod AS
+SELECT DISTINCT(ClaimSubmissionMethod)
+FROM Health.Claims;

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "PLclaims_bronze",
+    "description": "Production ingestion pipeline. Incrementally loads raw claims data from the source system into the Bronze lakehouse using watermark tracking."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e6cf5be2-9603-bfb3-45e4-8d3f1e793d6a"
+  }
+}

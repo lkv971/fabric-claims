@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "NBclaims_silver",
+    "description": "The core transformation logic for creating the curated Silver layer. This notebook applies critical business rules, builds the star schema (dimensions and facts), handles PII compliance, and ensures data quality. It is the production engine for generating the authoritative LHclaims_silver tables"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "708c0962-ca11-abbc-4473-e7a50edabd98"
+  }
+}

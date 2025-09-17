@@ -1,0 +1,11 @@
+expression DatabaseQuery =
+		let
+		    database = Sql.Database("MPYIJD7BPURUXF35J6DZO37VP4-7MP47VQZXQYEDP5BE5YBANVOOE.datawarehouse.fabric.microsoft.com", "73d7f0f4-fa1b-47ca-a2c1-06db295a29d9")
+		in
+		    database
+	lineageTag: f46ea62f-f42a-4754-888d-a7fcb71d9643
+
+	annotation PBI_IncludeFutureArtifacts = False
+
+	annotation PBI_RemovedChildren = [{"remoteItemId":{"analysisServicesObject":{"sourceName":null,"sourceLineageTag":"[Health].[IngestionLogs]"}},"objectType":"Table"}]
+

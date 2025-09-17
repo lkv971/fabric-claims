@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "NBclaims_bronze_watermark",
+    "description": "Utility notebook for managing the high-watermark for incremental Bronze processing."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "2f75bfdd-e7e4-af68-4012-56d38ff4b81b"
+  }
+}

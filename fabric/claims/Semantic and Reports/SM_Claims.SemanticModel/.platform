@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "SM_Claims",
+    "description": "The official semantic model for healthcare claims analytics. Includes defined measures, hierarchies, and Row-Level Security (RLS). Connect Power BI reports here for guaranteed accuracy and consistency."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b6ddebfa-b591-bbeb-448e-d67b37244ecb"
+  }
+}

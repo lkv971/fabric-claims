@@ -1,0 +1,12 @@
+relationship ce5926e2-eec3-ca18-62b5-58c5047abe6a
+	fromColumn: Claims.Date
+	toColumn: Dates.Date
+
+relationship 2fa0caaf-ce15-e0b0-52c4-0f621a100e34
+	fromColumn: Claims.'Provider ID'
+	toColumn: Providers.'Provider ID'
+
+relationship 16b7a7c8-c775-e351-532c-fe01ffdb5477
+	fromColumn: Claims.'Patient ID'
+	toColumn: Patients.'Patient ID'
+

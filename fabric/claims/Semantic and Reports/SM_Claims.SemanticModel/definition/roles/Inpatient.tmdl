@@ -1,0 +1,7 @@
+role Inpatient
+	modelPermission: read
+
+	tablePermission Claims = [Type] == "Inpatient"
+
+	annotation PBI_Id = 9e2b00ec82e84752ae45047c8fd545e4
+

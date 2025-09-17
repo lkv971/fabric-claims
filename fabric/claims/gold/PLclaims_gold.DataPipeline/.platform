@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "PLclaims_gold",
+    "description": "Production loading pipeline. Publishes data from Silver to the Gold data warehouse by executing the standard UPSERT process."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "61922eb8-6baf-9574-4681-0003a1b3439b"
+  }
+}

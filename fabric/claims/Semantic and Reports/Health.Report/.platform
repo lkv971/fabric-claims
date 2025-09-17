@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Health",
+    "description": "he official company report for healthcare claims analysis. Built on the certified semantic model. This is the approved d"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "35f45129-2969-970f-471c-12e47ee90c98"
+  }
+}

@@ -1,0 +1,308 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "GetLastModifiedClaims",
+        "type": "GetMetadata",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "fieldList": [
+            "lastModified"
+          ],
+          "datasetSettings": {
+            "annotations": [],
+            "type": "DelimitedText",
+            "typeProperties": {
+              "location": {
+                "type": "FileServerLocation",
+                "fileName": "enhanced_health_insurance_claims.csv"
+              },
+              "columnDelimiter": ",",
+              "escapeChar": "\\",
+              "firstRowAsHeader": true,
+              "quoteChar": "\""
+            },
+            "schema": [],
+            "externalReferences": {
+              "connection": "@pipeline().libraryVariables.VL_claims_Folder_connection_id"
+            }
+          },
+          "storeSettings": {
+            "type": "FileServerReadSettings",
+            "recursive": true,
+            "enablePartitionDiscovery": false
+          },
+          "formatSettings": {
+            "type": "DelimitedTextReadSettings"
+          }
+        }
+      },
+      {
+        "name": "LookupWatermark",
+        "type": "Lookup",
+        "dependsOn": [
+          {
+            "activity": "GetLastModifiedClaims",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource",
+            "storeSettings": {
+              "type": "LakehouseReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "JsonReadSettings"
+            }
+          },
+          "datasetSettings": {
+            "annotations": [],
+            "linkedService": {
+              "name": "ac53a6ee_5f73_4179_afc2_bc9c6333fc20",
+              "properties": {
+                "annotations": [],
+                "type": "Lakehouse",
+                "typeProperties": {
+                  "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+                  "artifactId": "@pipeline().libraryVariables.VL_claims_LH_bronze_id",
+                  "rootFolder": "Files"
+                }
+              }
+            },
+            "type": "Json",
+            "typeProperties": {
+              "location": {
+                "type": "LakehouseLocation",
+                "fileName": "Watermark.json",
+                "folderPath": "watermarks"
+              }
+            },
+            "schema": {}
+          }
+        }
+      },
+      {
+        "name": "LastModifiedComparison",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "LookupWatermark",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@greater(activity('GetLastModifiedClaims').output.lastModified, activity('LookupWatermark').output.firstRow.lastModified)",
+            "type": "Expression"
+          },
+          "ifFalseActivities": [],
+          "ifTrueActivities": [
+            {
+              "name": "CopyClaims",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "source": {
+                  "type": "DelimitedTextSource",
+                  "storeSettings": {
+                    "type": "FileServerReadSettings",
+                    "recursive": true,
+                    "enablePartitionDiscovery": false
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "type": "DelimitedText",
+                    "typeProperties": {
+                      "location": {
+                        "type": "FileServerLocation",
+                        "fileName": "enhanced_health_insurance_claims.csv"
+                      },
+                      "columnDelimiter": ",",
+                      "escapeChar": "\\",
+                      "firstRowAsHeader": true,
+                      "quoteChar": "\""
+                    },
+                    "schema": [],
+                    "externalReferences": {
+                      "connection": "@pipeline().libraryVariables.VL_claims_Folder_connection_id"
+                    }
+                  }
+                },
+                "sink": {
+                  "type": "DelimitedTextSink",
+                  "storeSettings": {
+                    "type": "LakehouseWriteSettings"
+                  },
+                  "formatSettings": {
+                    "type": "DelimitedTextWriteSettings",
+                    "fileExtension": ".txt"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "linkedService": {
+                      "name": "a5483174_b0f1_4bae_925e_e3d04d9d82d3",
+                      "properties": {
+                        "annotations": [],
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+                          "artifactId": "@pipeline().libraryVariables.VL_claims_LH_bronze_id",
+                          "rootFolder": "Files"
+                        }
+                      }
+                    },
+                    "type": "DelimitedText",
+                    "typeProperties": {
+                      "location": {
+                        "type": "LakehouseLocation",
+                        "fileName": "data_02921ab2-89f8-4d0f-9354-e0861d871f8d_c9ca6213-2671-45dc-b86f-3bbd00c06cf5.txt",
+                        "folderPath": "raw_claims"
+                      },
+                      "columnDelimiter": ",",
+                      "escapeChar": "\\",
+                      "firstRowAsHeader": true,
+                      "quoteChar": "\""
+                    },
+                    "schema": []
+                  }
+                },
+                "enableStaging": false,
+                "translator": {
+                  "type": "TabularTranslator",
+                  "typeConversion": true,
+                  "typeConversionSettings": {
+                    "allowDataTruncation": true,
+                    "treatBooleanAsNumber": false
+                  }
+                }
+              }
+            },
+            {
+              "name": "UpdateWatermark",
+              "type": "TridentNotebook",
+              "dependsOn": [
+                {
+                  "activity": "dataQuality",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "notebookId": {
+                  "value": "@pipeline().libraryVariables.VL_claims_NB_bronze_update",
+                  "type": "Expression"
+                },
+                "workspaceId": {
+                  "value": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "dataQuality",
+              "type": "TridentNotebook",
+              "dependsOn": [
+                {
+                  "activity": "CopyClaims",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "notebookId": {
+                  "value": "@pipeline().libraryVariables.VL_claims_NB_bronze_id",
+                  "type": "Expression"
+                },
+                "workspaceId": {
+                  "value": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+                  "type": "Expression"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "libraryVariables": {
+      "VL_claims_LH_bronze_id": {
+        "type": "String",
+        "variableName": "LH_bronze_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_WH_bronze_id": {
+        "type": "String",
+        "variableName": "WH_bronze_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_Workspace_id": {
+        "type": "String",
+        "variableName": "Workspace_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_Folder_connection_id": {
+        "type": "String",
+        "variableName": "Folder_connection_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_NB_bronze_id": {
+        "type": "String",
+        "variableName": "NB_bronze_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_NB_bronze_update": {
+        "type": "String",
+        "variableName": "NB_bronze_update",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_SQL_endpoints": {
+        "type": "String",
+        "variableName": "SQL_endpoints",
+        "libraryName": "VL_claims"
+      }
+    }
+  }
+}

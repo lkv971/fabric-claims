@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Lakehouse",
+    "displayName": "LHclaims_silver",
+    "description": "The authoritative, curated data lake for claims. Contains cleansed and modeled data in Delta format, serving as the single source for all downstream Gold layer consumption. Schema is stable and production-ready"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "1796500b-c431-9eae-459f-9a67b98cd8e8"
+  }
+}

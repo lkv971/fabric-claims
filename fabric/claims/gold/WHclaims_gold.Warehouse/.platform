@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Warehouse",
+    "displayName": "WHclaims_gold",
+    "description": "The single source of truth for claims data. Contains production-ready, fully governed dimension and fact tables. This is the authoritative dataset for all reporting and analytics. All business logic has been applied."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "295a29d9-06db-a2c1-47ca-fa1b73d7f0f4"
+  }
+}

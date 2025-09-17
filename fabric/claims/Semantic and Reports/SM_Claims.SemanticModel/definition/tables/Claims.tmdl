@@ -1,0 +1,415 @@
+table Claims
+	lineageTag: 4a5d7e04-efa5-4371-917d-43e12ac4f1ec
+	sourceLineageTag: [Health].[Claims]
+
+	measure 'Total Claims' = COUNTROWS(Claims)
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: 7b2068c6-a18b-45cd-9e57-dc39cf785928
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Total Amount' = SUM(Claims[Amount])
+		displayFolder: Amount Measures
+		lineageTag: 821bbad9-3b71-417f-b07d-a54342777da1
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Unique Patients' = DISTINCTCOUNT(Claims[Patient ID])
+		formatString: 0
+		displayFolder: Analytics Measures
+		lineageTag: 8e977c0c-0a1a-4c3a-a2bb-6e7ddfa22e7d
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Approved Claims' = CALCULATE([Total Claims], Claims[Status] = "Approved")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: 151c4575-bd02-471e-bf0b-c1537d6e6a34
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Denied Claims' = CALCULATE([Total Claims], Claims[Status] = "Denied")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: 2727f106-7134-447a-94bd-8c12e04f3617
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Pending Claims' = CALCULATE([Total Claims], Claims[Status] = "Pending")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: 28aabecf-a262-4baf-aef5-a595fa88b6e5
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Approved Amount' = CALCULATE([Total Amount], Claims[Status] = "Approved")
+		displayFolder: Amount Measures
+		lineageTag: 2b8ebce3-8fea-4e1c-84ac-a74276ced3c6
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Denied Amount' = CALCULATE([Total Amount], Claims[Status] = "Denied")
+		displayFolder: Amount Measures
+		lineageTag: c8b3679f-f5b6-4312-9bfc-b900ab4e65ee
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Pending Amount' = CALCULATE([Total Amount], Claims[Status] = "Pending")
+		displayFolder: Amount Measures
+		lineageTag: cf1af69b-469b-45c5-8b9f-baee5467924a
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Amount' = AVERAGE(Claims[Amount])
+		displayFolder: Amount Measures
+		lineageTag: 20a616ed-d5bd-4c06-a615-883dfcb90da0
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Approval Rate %' = DIVIDE([Approved Claims], [Total Claims])
+		displayFolder: Analytics Measures
+		lineageTag: 1c5b7ff0-89d6-41a3-9e07-232f0f8b764b
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Amount YTD' = TOTALYTD([Total Amount], Dates[Date])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Time Intelligence
+		lineageTag: dce273a5-63a3-4885-9981-7d4732e98309
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Total Amount QTD' = TOTALQTD([Total Amount], Dates[Date])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Time Intelligence
+		lineageTag: 21862c6c-3b71-454f-8713-006b63e4d0ce
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Total Amount MTD' = TOTALMTD([Total Amount], Dates[Date])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Time Intelligence
+		lineageTag: f940f8c1-993c-4471-95aa-1498311bc242
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Total Amount LY' = CALCULATE([Total Amount], SAMEPERIODLASTYEAR(Dates[Date]))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Time Intelligence
+		lineageTag: c9d41e83-3864-4f6b-a78b-2d094c98697e
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Total Amount YoY %' = DIVIDE([Total Amount] - [Total Amount LY], [Total Amount LY])
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Time Intelligence
+		lineageTag: 26855917-a8b2-4569-a183-05fcf6a674ee
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		changedProperty = FormatString
+
+	measure 'Inpatient Claims' = CALCULATE([Total Claims], Claims[Type] = "Inpatient")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: 03e02836-20e6-4a31-8f52-f985d3fa2720
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Outpatient Claims' = CALCULATE([Total Claims], Claims[Type] = "Outpatient")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: b958f3df-ef4c-474e-83b2-0c18baec8dfb
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Emergency Claims' = CALCULATE([Total Claims], Claims[Type] = "Emergency")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: eb6a5ee0-a013-40ff-b8c1-2e46bd3d7674
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Routine Claims' = CALCULATE([Total Claims], Claims[Type] = "Routine")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: 5f14bc11-8166-4589-9958-9d5a39f24661
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'UrgentCare Claims' = CALCULATE([Total Claims], Claims[Type] = "Urgent Care")
+		formatString: 0
+		displayFolder: Claims Measures
+		lineageTag: c7803f38-e9f7-432c-95b3-b29d9623ed3b
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Denied Rate %' = DIVIDE([Denied Claims], [Total Claims])
+		displayFolder: Analytics Measures
+		lineageTag: c93d0ce2-ea56-4ef7-a5be-e7d94e1c528d
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Pending Rate %' = DIVIDE([Pending Claims], [Total Claims])
+		displayFolder: Analytics Measures
+		lineageTag: c07aaaf1-75b6-43b7-981c-d14a0f4bce79
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Unique Providers' = DISTINCTCOUNT(Claims[Provider ID])
+		formatString: 0
+		displayFolder: Analytics Measures
+		lineageTag: 998282d5-a817-4ce2-ba6a-76d58c9d90c9
+
+		changedProperty = Name
+
+		changedProperty = DisplayFolder
+
+	measure 'Total Amount YoY Δ' =
+			
+			VAR Curr = [Total Amount]
+			VAR Prev = CALCULATE([Total Amount], SAMEPERIODLASTYEAR(Dates[Date]))
+			RETURN Curr - Prev
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		displayFolder: Time Intelligence
+		lineageTag: 2fcb434e-ce3d-4a06-85b9-8e63abe219ed
+
+		changedProperty = DisplayFolder
+
+		changedProperty = Name
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'Claim ID'
+		dataType: string
+		sourceProviderType: varchar(100)
+		lineageTag: ac0c6d67-7c36-4322-87ad-17df28a03d6f
+		sourceLineageTag: ClaimID
+		summarizeBy: none
+		sourceColumn: ClaimID
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Patient ID'
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(100)
+		lineageTag: 90d27232-a593-40bb-aed1-d64e7d1bc250
+		sourceLineageTag: PatientID
+		summarizeBy: none
+		sourceColumn: PatientID
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Provider ID'
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(100)
+		lineageTag: 6b00f381-34a0-44d7-b83d-d218ac64d65f
+		sourceLineageTag: ProviderID
+		summarizeBy: none
+		sourceColumn: ProviderID
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		sourceProviderType: date
+		lineageTag: a01ed14b-f802-40c5-b806-ae99eb5282d7
+		sourceLineageTag: ClaimDate
+		summarizeBy: none
+		sourceColumn: ClaimDate
+
+		changedProperty = Name
+
+		changedProperty = DataType
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Amount
+		dataType: double
+		sourceProviderType: float
+		lineageTag: 2b74ca81-1bb0-479f-8ede-734763a1cc4d
+		sourceLineageTag: ClaimAmount
+		summarizeBy: none
+		sourceColumn: ClaimAmount
+
+		changedProperty = Name
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Diagnosis Code'
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 3ba726c1-99ea-4f5e-a0ec-bc06951e7af8
+		sourceLineageTag: DiagnosisCode
+		summarizeBy: none
+		sourceColumn: DiagnosisCode
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Procedure Code'
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 9680eaeb-c988-456e-98e8-e030beca41b8
+		sourceLineageTag: ProcedureCode
+		summarizeBy: none
+		sourceColumn: ProcedureCode
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 1343f2da-91ac-4f58-8f9e-0dc5b0b5700d
+		sourceLineageTag: ClaimStatus
+		summarizeBy: none
+		sourceColumn: ClaimStatus
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 7d231040-0f6e-4c83-b092-b6154aecf51c
+		sourceLineageTag: ClaimType
+		summarizeBy: none
+		sourceColumn: ClaimType
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Submission Method'
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 6138d95d-55f6-4bae-b123-1412bb0f0d06
+		sourceLineageTag: ClaimSubmissionMethod
+		summarizeBy: none
+		sourceColumn: ClaimSubmissionMethod
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Claims = entity
+		mode: directLake
+		source
+			entityName: Claims
+			schemaName: Health
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

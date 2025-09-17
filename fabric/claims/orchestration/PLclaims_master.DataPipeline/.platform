@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "PLclaims_master",
+    "description": "The primary orchestration pipeline for the end-to-end claims data product. Executes the full Bronze->Silver->Gold->Semantic Model workflow. This is the production scheduler for the entire process."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "2487d333-1796-a781-4f91-7abcf1e45143"
+  }
+}

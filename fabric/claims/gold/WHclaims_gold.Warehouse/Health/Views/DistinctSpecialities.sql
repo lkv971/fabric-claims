@@ -1,0 +1,4 @@
+-- Auto Generated (Do not modify) AA8329F0B324AA83641C77610220E604943D0DF4206799D496D942BCC56763BC
+CREATE VIEW Health.DistinctSpecialities AS 
+SELECT DISTINCT(ProviderSpecialty) 
+FROM Health.Providers;

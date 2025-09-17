@@ -1,0 +1,134 @@
+table Dates
+	lineageTag: 8c22e16a-4f76-41a3-9dcb-cb0e47225358
+	sourceLineageTag: [Health].[Dates]
+	dataCategory: Time
+
+	column 'Date ID'
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 1d4f8309-b1b9-41ab-bdac-38a05d925920
+		sourceLineageTag: DateID
+		summarizeBy: none
+		sourceColumn: DateID
+
+		changedProperty = Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Short Date
+		sourceProviderType: date
+		lineageTag: 69576c51-40e5-4086-bf3c-a9c71f226c57
+		sourceLineageTag: Date
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = DataType
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column Year
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 2840c873-10fe-4f1f-8eed-4681665660dc
+		sourceLineageTag: Year
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Number'
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 3240b0e8-4c78-4f69-8384-88bb378f99fd
+		sourceLineageTag: Month
+		summarizeBy: none
+		sourceColumn: Month
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day Number'
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 01564c51-cb02-495c-afcb-712d2deb5de5
+		sourceLineageTag: Day
+		summarizeBy: none
+		sourceColumn: Day
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 7c4c66bd-c3b0-4950-b4b3-3a8ebe1ba148
+		sourceLineageTag: MonthName
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: 'Month Number'
+
+		changedProperty = Name
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		dataType: string
+		sourceProviderType: varchar(50)
+		lineageTag: 22495ea7-eb1b-432b-bcc8-384ed41ccced
+		sourceLineageTag: DayName
+		summarizeBy: none
+		sourceColumn: DayName
+		sortByColumn: 'Day Number'
+
+		changedProperty = Name
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Date Hierarchy'
+		lineageTag: 0aad5640-f180-495e-be0d-1560369e7229
+
+		level Year
+			lineageTag: 851490f8-b421-41d7-96bb-50467110a54f
+			column: Year
+
+		level Month
+			lineageTag: d20dd944-bd53-4dfc-b9a7-45b2b263dc3c
+			column: Month
+
+		level Day
+			lineageTag: 1f738be6-d128-43ed-a297-79bcf394436f
+			column: Day
+
+		changedProperty = Name
+
+	partition Dates = entity
+		mode: directLake
+		source
+			entityName: Dates
+			schemaName: Health
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

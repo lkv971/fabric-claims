@@ -1,0 +1,7 @@
+role OutpatientUrgent
+	modelPermission: read
+
+	tablePermission Claims = [Type] IN {"Outpatient","Urgent Care"}
+
+	annotation PBI_Id = e6a3beb340bb4adfaaa69611b6a05dc4
+

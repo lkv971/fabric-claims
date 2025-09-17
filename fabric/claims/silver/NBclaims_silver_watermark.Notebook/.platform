@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "NBclaims_silver_watermark",
+    "description": "Utility notebook for managing the high-watermark for incremental Silver processing."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "a3bb98b8-630e-8421-4637-d50fa90df345"
+  }
+}

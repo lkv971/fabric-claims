@@ -1,0 +1,126 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "Invoke_bronze",
+        "type": "InvokePipeline",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "waitOnCompletion": true,
+          "operationType": "InvokeFabricPipeline",
+          "pipelineId": {
+            "value": "@pipeline().libraryVariables.VL_claims_PL_bronze_id",
+            "type": "Expression"
+          },
+          "workspaceId": {
+            "value": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+            "type": "Expression"
+          },
+          "parameters": {}
+        },
+        "externalReferences": {
+          "connection": "c563d913-1b27-41cd-9ea7-7718c59a8f3e"
+        }
+      },
+      {
+        "name": "Invoke_silver",
+        "type": "InvokePipeline",
+        "dependsOn": [
+          {
+            "activity": "Invoke_bronze",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "waitOnCompletion": true,
+          "operationType": "InvokeFabricPipeline",
+          "pipelineId": {
+            "value": "@pipeline().libraryVariables.VL_claims_PL_silver_id",
+            "type": "Expression"
+          },
+          "workspaceId": {
+            "value": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+            "type": "Expression"
+          },
+          "parameters": {}
+        },
+        "externalReferences": {
+          "connection": "c563d913-1b27-41cd-9ea7-7718c59a8f3e"
+        }
+      },
+      {
+        "name": "Invoke_gold",
+        "type": "InvokePipeline",
+        "dependsOn": [
+          {
+            "activity": "Invoke_silver",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "waitOnCompletion": true,
+          "operationType": "InvokeFabricPipeline",
+          "pipelineId": {
+            "value": "@pipeline().libraryVariables.VL_claims_PL_gold_id",
+            "type": "Expression"
+          },
+          "workspaceId": {
+            "value": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+            "type": "Expression"
+          },
+          "parameters": {}
+        },
+        "externalReferences": {
+          "connection": "c563d913-1b27-41cd-9ea7-7718c59a8f3e"
+        }
+      }
+    ],
+    "libraryVariables": {
+      "VL_claims_PL_bronze_id": {
+        "type": "String",
+        "variableName": "PL_bronze_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_PL_silver_id": {
+        "type": "String",
+        "variableName": "PL_silver_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_PL_gold_id": {
+        "type": "String",
+        "variableName": "PL_gold_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_Workspace_id": {
+        "type": "String",
+        "variableName": "Workspace_id",
+        "libraryName": "VL_claims"
+      }
+    }
+  }
+}

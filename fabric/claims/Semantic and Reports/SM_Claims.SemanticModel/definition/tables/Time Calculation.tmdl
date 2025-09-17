@@ -1,0 +1,43 @@
+table 'Time Calculation'
+	lineageTag: de9a0f43-66c7-48f8-9224-ec8dfcffbea0
+
+	calculationGroup
+
+		calculationItem YTD = TOTALYTD(SELECTEDMEASURE(), Dates[Date])
+
+		calculationItem QTD = TOTALQTD(SELECTEDMEASURE(), Dates[Date])
+
+		calculationItem LY = CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR(Dates[Date]))
+
+		calculationItem MTD = TOTALMTD(SELECTEDMEASURE(), Dates[Date])
+
+		calculationItem CY = SELECTEDMEASURE()
+
+		calculationItem 'YoY Δ' = SELECTEDMEASURE() - CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR(Dates[Date]))
+
+		calculationItem 'YoY %' =
+				
+				VAR Curr = SELECTEDMEASURE()
+				VAR Prev = CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR(Dates[Date]))
+				RETURN DIVIDE(Curr - Prev, Prev)
+
+		calculationItem 'Last 12M' = CALCULATE(SELECTEDMEASURE(), DATESINPERIOD(Dates[Date], MAX(Dates[Date]), -12, MONTH))
+
+	column 'Time Calculation'
+		dataType: string
+		lineageTag: bfad969e-e649-4406-b3b1-cf12ec030a72
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		formatString: 0
+		lineageTag: 39875f71-49b6-470a-906d-81e4fc53d80b
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

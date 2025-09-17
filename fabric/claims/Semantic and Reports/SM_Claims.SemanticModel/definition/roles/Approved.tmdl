@@ -1,0 +1,7 @@
+role Approved
+	modelPermission: read
+
+	tablePermission Claims = [Status] == "Approved"
+
+	annotation PBI_Id = 93133781ccb34f3ca867aeedbd09b1c8
+

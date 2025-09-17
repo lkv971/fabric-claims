@@ -1,0 +1,293 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "LookupSilverWatermark",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource",
+            "storeSettings": {
+              "type": "LakehouseReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "JsonReadSettings"
+            }
+          },
+          "datasetSettings": {
+            "annotations": [],
+            "linkedService": {
+              "name": "0a0461e1_fcd5_436c_86ee_88b33d21bd11",
+              "properties": {
+                "annotations": [],
+                "type": "Lakehouse",
+                "typeProperties": {
+                  "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id",
+                  "artifactId": "@pipeline().libraryVariables.VL_claims_LH_silver_id",
+                  "rootFolder": "Files"
+                }
+              }
+            },
+            "type": "Json",
+            "typeProperties": {
+              "location": {
+                "type": "LakehouseLocation",
+                "fileName": "Watermark.json",
+                "folderPath": "watermarks"
+              }
+            },
+            "schema": {}
+          }
+        }
+      },
+      {
+        "name": "LookupGoldIngestionLog",
+        "type": "Lookup",
+        "dependsOn": [
+          {
+            "activity": "LookupSilverWatermark",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "source": {
+            "type": "DataWarehouseSource",
+            "sqlReaderQuery": "SELECT COALESCE(MAX(FinishedAtUTC),\r\nCAST('1970-01-01T00:00:00' AS DATETIME2(3)))\r\nAS last_modified\r\nFROM Health.IngestionLogs\r\nWHERE Layer = 'Gold' AND TargetObject = 'All' AND Status = 'Succeeded'\r\n;",
+            "queryTimeout": "02:00:00",
+            "partitionOption": "None"
+          },
+          "datasetSettings": {
+            "annotations": [],
+            "linkedService": {
+              "name": "7ee8d524_63cf_4767_bd6c_669d7c70ee9d",
+              "properties": {
+                "annotations": [],
+                "type": "DataWarehouse",
+                "typeProperties": {
+                  "endpoint": "@pipeline().libraryVariables.VL_claims_SQL_endpoints",
+                  "artifactId": "@pipeline().libraryVariables.VL_claims_WH_bronze_id",
+                  "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id"
+                }
+              }
+            },
+            "type": "DataWarehouseTable",
+            "schema": [],
+            "typeProperties": {}
+          }
+        }
+      },
+      {
+        "name": "LookupComparison",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "LookupGoldIngestionLog",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@greater(activity('LookupSilverWatermark').output.firstRow.lastModified, activity('LookupGoldIngestionLog').output.firstRow.last_modified)",
+            "type": "Expression"
+          },
+          "ifFalseActivities": [
+            {
+              "name": "UpdateFailureIngestionLogs",
+              "type": "Script",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "linkedService": {
+                "name": "15d4a585_537b_477c_822e_9a5dae63d86e",
+                "properties": {
+                  "annotations": [],
+                  "type": "DataWarehouse",
+                  "typeProperties": {
+                    "endpoint": "@pipeline().libraryVariables.VL_claims_SQL_endpoints",
+                    "artifactId": "@pipeline().libraryVariables.VL_claims_WH_bronze_id",
+                    "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id"
+                  }
+                }
+              },
+              "typeProperties": {
+                "scripts": [
+                  {
+                    "type": "NonQuery",
+                    "text": {
+                      "value": "INSERT INTO Health.IngestionLogs (IngestionID, PipelineName, Layer, TargetObject,\r\nStatus, FinishedAtUTC, WatermarkBefore, WatermarkAfter, RowsWritten, ErrorMessage,\r\nRunID, BatchID, TriggerType)\r\nVALUES (NEWID(), 'PLclaims_gold', 'Gold', 'All', 'Failed', SYSUTCDATETIME(),\r\n'@{activity('LookupSilverWatermark').output.firstRow.lastModified}', \r\n'@{activity('LookupGoldIngestionLog').output.firstRow.last_modified}', \r\n0, 'See pipeline monitor', '@{pipeline().runId}', NULL, '@{pipeline().TriggerType}');",
+                      "type": "Expression"
+                    }
+                  }
+                ],
+                "scriptBlockExecutionTimeout": "02:00:00"
+              }
+            }
+          ],
+          "ifTrueActivities": [
+            {
+              "name": "StagingViews",
+              "type": "Script",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "linkedService": {
+                "name": "1e8cb726_d523_4d23_a8f5_2ed4daedbab7",
+                "properties": {
+                  "annotations": [],
+                  "type": "DataWarehouse",
+                  "typeProperties": {
+                    "endpoint": "@pipeline().libraryVariables.VL_claims_SQL_endpoints",
+                    "artifactId": "@pipeline().libraryVariables.VL_claims_WH_bronze_id",
+                    "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id"
+                  }
+                }
+              },
+              "typeProperties": {
+                "scripts": [
+                  {
+                    "type": "NonQuery",
+                    "text": {
+                      "value": "DROP VIEW IF EXISTS Health.StagingDates;\r\nEXEC('CREATE VIEW Health.StagingDates \r\nAS SELECT DISTINCT\r\nDateID,\r\nDate,\r\nYear,\r\nMonth,\r\nDay,\r\nMonthName,\r\nDayName\r\nFROM LHclaims_silver.dbo.dim_dates\r\n;');\r\n\r\nDROP VIEW IF EXISTS Health.StagingPatients;\r\nEXEC('CREATE VIEW Health.StagingPatients\r\nAS SELECT DISTINCT\r\nPatientID,\r\nPatientAge,\r\nPatientGender,\r\nPatientMaritalStatus,\r\nPatientEmploymentStatus\r\nFROM LHclaims_silver.dbo.dim_patients\r\n;');\r\n\r\nDROP VIEW IF EXISTS Health.StagingProviders;\r\nEXEC('CREATE VIEW  Health.StagingProviders\r\nAS SELECT DISTINCT\r\nProviderID,\r\nProviderSpecialty,\r\nProviderLocation\r\nFROM LHclaims_silver.dbo.dim_providers\r\n;');\r\n\r\nDROP VIEW IF EXISTS Health.StagingClaims;\r\nEXEC('CREATE VIEW Health.StagingClaims\r\nAS SELECT DISTINCT\r\nClaimID,\r\nPatientID,\r\nProviderID,\r\nClaimDate,\r\nClaimAmount,\r\nDiagnosisCode,\r\nProcedureCode,\r\nClaimStatus,\r\nClaimType,\r\nClaimSubmissionMethod\r\nFROM LHclaims_silver.dbo.fact_claims\r\n;');",
+                      "type": "Expression"
+                    }
+                  }
+                ],
+                "scriptBlockExecutionTimeout": "02:00:00"
+              }
+            },
+            {
+              "name": "Upsert",
+              "type": "SqlServerStoredProcedure",
+              "dependsOn": [
+                {
+                  "activity": "StagingViews",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "storedProcedureName": "[Health].[sp_upsert_claims]"
+              },
+              "linkedService": {
+                "name": "46c31fac_e479_40b3_928d_ebf4529bcbe7",
+                "properties": {
+                  "annotations": [],
+                  "type": "DataWarehouse",
+                  "typeProperties": {
+                    "endpoint": "@pipeline().libraryVariables.VL_claims_SQL_endpoints",
+                    "artifactId": "@pipeline().libraryVariables.VL_claims_WH_bronze_id",
+                    "workspaceId": "@pipeline().libraryVariables.VL_claims_Workspace_id"
+                  }
+                }
+              }
+            },
+            {
+              "name": "UpdateSuccessfulIngestionLogs",
+              "type": "Script",
+              "dependsOn": [
+                {
+                  "activity": "Upsert",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "linkedService": {
+                "name": "d8ff5aeb_43ac_4827_9fcd_14c0a11dcbaa",
+                "properties": {
+                  "annotations": [],
+                  "type": "DataWarehouse",
+                  "typeProperties": {
+                    "endpoint": "@pipeline().libraryVariables.VL_claims_SQL_endpoints",
+                    "artifactId": "@pipeline().libraryVariables.VL_claims_WH_bronze_id",
+                    "workspaceId": "@pipeline().libraryVariables.VL_claims_WH_bronze_id"
+                  }
+                }
+              },
+              "typeProperties": {
+                "scripts": [
+                  {
+                    "type": "NonQuery",
+                    "text": {
+                      "value": "INSERT INTO Health.IngestionLogs (IngestionID, PipelineName, Layer, TargetObject,\r\nStatus, FinishedAtUTC, WatermarkBefore, WatermarkAfter, RowsWritten, ErrorMessage,\r\nRunID, BatchID, TriggerType)\r\nVALUES (NEWID(), 'PLclaims_gold', 'Gold', 'All', 'Succeeded', SYSUTCDATETIME(),\r\n'@{activity('LookupSilverWatermark').output.firstRow.lastModified}', \r\n'@{activity('LookupGoldIngestionLog').output.firstRow.last_modified}', \r\nNULL, NULL, '@{pipeline().runId}', NULL, '@{pipeline().TriggerType}');",
+                      "type": "Expression"
+                    }
+                  }
+                ],
+                "scriptBlockExecutionTimeout": "02:00:00"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "libraryVariables": {
+      "VL_claims_LH_silver_id": {
+        "type": "String",
+        "variableName": "LH_silver_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_WH_bronze_id": {
+        "type": "String",
+        "variableName": "WH_bronze_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_Workspace_id": {
+        "type": "String",
+        "variableName": "Workspace_id",
+        "libraryName": "VL_claims"
+      },
+      "VL_claims_SQL_endpoints": {
+        "type": "String",
+        "variableName": "SQL_endpoints",
+        "libraryName": "VL_claims"
+      }
+    }
+  }
+}

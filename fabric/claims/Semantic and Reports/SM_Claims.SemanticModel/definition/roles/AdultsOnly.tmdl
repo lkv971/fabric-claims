@@ -1,0 +1,7 @@
+role AdultsOnly
+	modelPermission: read
+
+	tablePermission Patients = [Age] >= 18
+
+	annotation PBI_Id = a273d8d51a544cd982dc24eae40fedf4
+

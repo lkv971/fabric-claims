@@ -1,0 +1,49 @@
+name: Fabric Deploy (Dev → Prod)
+
+on:
+  workflow_dispatch:
+    inputs:
+      items_json:
+        description: 'Optional JSON array for selective deploy (itemsToDeploy)'
+        required: false
+        default: ''
+      note:
+        description: 'Deployment note'
+        required: false
+        default: 'Automated deploy'
+  push:
+    branches: [ "main" ]
+    paths:
+      - "fabric/**"
+      - "ops/**"
+
+concurrency:
+  group: fabric-prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    environment: prod   # <-- pulls env-scoped secrets/vars and enforces approvals
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Fabric deploy (by stage NAMES)
+        shell: pwsh
+        env:
+          FABRIC_TENANT_ID:      ${{ secrets.FABRIC_TENANT_ID }}
+          FABRIC_CLIENT_ID:      ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET:  ${{ secrets.FABRIC_CLIENT_SECRET }}
+          FABRIC_PIPELINE_NAME:  ${{ vars.FABRIC_PIPELINE_NAME }}
+          FABRIC_SOURCE_STAGE:   ${{ vars.FABRIC_SOURCE_STAGE || 'Development' }}
+          FABRIC_TARGET_STAGE:   ${{ vars.FABRIC_TARGET_STAGE || 'Production' }}
+        run: |
+          ./ops/Deploy-Fabric.ps1 `
+            -TenantId        $env:FABRIC_TENANT_ID `
+            -ClientId        $env:FABRIC_CLIENT_ID `
+            -ClientSecret    $env:FABRIC_CLIENT_SECRET `
+            -PipelineName    $env:FABRIC_PIPELINE_NAME `
+            -SourceStageName $env:FABRIC_SOURCE_STAGE `
+            -TargetStageName $env:FABRIC_TARGET_STAGE `
+            -Note            "${{ github.event.inputs.note }}" `
+            -ItemsJson       "${{ github.event.inputs.items_json }}"

@@ -43,7 +43,7 @@ jobs:
             -ClientId        $env:FABRIC_CLIENT_ID `
             -ClientSecret    $env:FABRIC_CLIENT_SECRET `
             -PipelineName    $env:FABRIC_PIPELINE_NAME `
-            -SourceStageName $env:FABRIC_SOURCE_STAGE `
-            -TargetStageName $env:FABRIC_TARGET_STAGE `
+            -SourceStage     $env:FABRIC_SOURCE_STAGE `
+            -TargetStage     $env:FABRIC_TARGET_STAGE `
             -Note            "${{ github.event.inputs.note }}" `
             -ItemsJson       "${{ github.event.inputs.items_json }}"

@@ -1,11 +1,9 @@
 <#
 Deploy Dev → Prod for a Fabric deployment pipeline using **stage names**.
 
-Fix: For items listed from the **source stage**, use itemId as sourceItemId when sourceItemId is null.
-This avoids “no items remain to deploy” and “null sourceItemId” errors.
-
+Key points:
 - Resolves pipeline & stages by DISPLAY NAME (no GUIDs needed).
-- Skips any stage items that lack a valid ID.
+- For items listed from the **source stage**, uses itemId when sourceItemId is null.
 - Default-excludes Warehouses (SPNs aren’t supported for DW deploy via API).
 - Optional -ItemsJson to do selective deploy by displayName or sourceItemId.
 - Polls the Long Running Operation (LRO) until Succeeded.
@@ -29,15 +27,15 @@ param(
   [string]$Note = "CI/CD deploy via GitHub Actions",
 
   # Optional selective deploy list (JSON). Leave empty to deploy “everything” (minus excluded types).
-  # Example JSON to pass via workflow_dispatch input:
+  # Example:
   # [
   #   {"itemDisplayName":"PLclaims_bronze","itemType":"DataPipeline"},
   #   {"itemDisplayName":"PLclaims_silver","itemType":"DataPipeline"},
   #   {"itemDisplayName":"PLclaims_gold","itemType":"DataPipeline"},
   #   {"itemDisplayName":"NBclaims_bronze","itemType":"Notebook"},
   #   {"itemDisplayName":"NBclaims_silver","itemType":"Notebook"},
-  #   {"itemDisplayName":"Claims Semantic Model","itemType":"SemanticModel"},
-  #   {"itemDisplayName":"Claims Report","itemType":"Report"}
+  #   {"itemDisplayName":"SM_Claims","itemType":"SemanticModel"},
+  #   {"itemDisplayName":"Health","itemType":"Report"}
   # ]
   [string]$ItemsJson = "",
 
@@ -67,7 +65,13 @@ function GetJson($uri) { Invoke-RestMethod -Headers $authH -Uri $uri -Method GET
 
 function PostLro($uri, $obj) {
   $json = $obj | ConvertTo-Json -Depth 20
-  $resp = Invoke-WebRequest -Method POST -Uri $uri -Headers ($authH + @{ "Content-Type"="application/json" }) -Body $json -MaximumRedirection 0
+
+  # Build a single headers dictionary (don't pass an array to -Headers)
+  $headers = @{}
+  foreach ($kv in $authH.GetEnumerator()) { $headers[$kv.Key] = $kv.Value }
+  $headers["Content-Type"] = "application/json"
+
+  $resp = Invoke-WebRequest -Method POST -Uri $uri -Headers $headers -Body $json -MaximumRedirection 0
 
   # Long Running Operation pattern
   $opUrl = $resp.Headers["Operation-Location"]
@@ -107,7 +111,7 @@ $pipeId = $PipelineId
 if (-not $pipeId) {
   $all = (GetJson "$base/deploymentPipelines").value
   if (-not $all) { throw "No deployment pipelines visible to the service principal." }
-  $targetName = ($PipelineName ?? "").Trim()
+  $targetName = if ($PipelineName) { $PipelineName.Trim() } else { "" }
   $pipe = $all | Where-Object { (($_.displayName ?? "")).Trim() -ieq $targetName }
   if (-not $pipe) {
     Write-Host "Pipelines visible to SPN:"
@@ -156,12 +160,16 @@ function Filter-Excluded($items, $exclude){
 # ---- Load items from **SOURCE** stage and coalesce to a usable sourceItemId ----
 $raw = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
 
-# Prepare list: sourceItemId := (sourceItemId ?? itemId) for source stage items
+# For source stage, sourceItemId can be null — use itemId instead.
 $stageItems = @()
 foreach($it in $raw){
   $sid = $null
-  if ($it.PSObject.Properties.Name -contains "sourceItemId" -and $it.sourceItemId) { $sid = $it.sourceItemId }
-  else { $sid = $it.itemId }  # fallback for source stage
+  if ($it.PSObject.Properties.Name -contains "sourceItemId" -and $it.sourceItemId) {
+    $sid = $it.sourceItemId
+  } else {
+    $sid = $it.itemId   # fallback
+  }
+
   if ($sid -and ($sid -match '^[0-9a-fA-F-]{36}$')) {
     $stageItems += [pscustomobject]@{
       itemDisplayName = $it.itemDisplayName
@@ -225,6 +233,7 @@ $body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId;
 
 # ---- Kick off deployment ----
 $deployUri = "$base/deploymentPipelines/$pipeId/deploy"
+Write-Host "Deploy URI: $deployUri"
 $result = PostLro $deployUri $body
 
 Write-Host "Deployment Succeeded."

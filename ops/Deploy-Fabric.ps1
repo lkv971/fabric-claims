@@ -1,7 +1,11 @@
 <#
 Deploy Dev → Prod for a Fabric deployment pipeline using **stage names**.
+
+Fix: For items listed from the **source stage**, use itemId as sourceItemId when sourceItemId is null.
+This avoids “no items remain to deploy” and “null sourceItemId” errors.
+
 - Resolves pipeline & stages by DISPLAY NAME (no GUIDs needed).
-- Skips any stage items that lack a valid sourceItemId (GUID).
+- Skips any stage items that lack a valid ID.
 - Default-excludes Warehouses (SPNs aren’t supported for DW deploy via API).
 - Optional -ItemsJson to do selective deploy by displayName or sourceItemId.
 - Polls the Long Running Operation (LRO) until Succeeded.
@@ -25,7 +29,7 @@ param(
   [string]$Note = "CI/CD deploy via GitHub Actions",
 
   # Optional selective deploy list (JSON). Leave empty to deploy “everything” (minus excluded types).
-  # Example JSON you can pass from the workflow input:
+  # Example JSON to pass via workflow_dispatch input:
   # [
   #   {"itemDisplayName":"PLclaims_bronze","itemType":"DataPipeline"},
   #   {"itemDisplayName":"PLclaims_silver","itemType":"DataPipeline"},
@@ -59,9 +63,7 @@ function Get-FabricToken {
 $token = Get-FabricToken $TenantId $ClientId $ClientSecret
 $authH = @{ Authorization = "Bearer $token" }
 
-function GetJson($uri) {
-  Invoke-RestMethod -Headers $authH -Uri $uri -Method GET
-}
+function GetJson($uri) { Invoke-RestMethod -Headers $authH -Uri $uri -Method GET }
 
 function PostLro($uri, $obj) {
   $json = $obj | ConvertTo-Json -Depth 20
@@ -89,11 +91,8 @@ function PostLro($uri, $obj) {
       }
     }
 
-    try {
-      return Invoke-RestMethod -Method GET -Uri ($opUrl.TrimEnd('/') + "/result") -Headers $authH
-    } catch {
-      return $op
-    }
+    try { return Invoke-RestMethod -Method GET -Uri ($opUrl.TrimEnd('/') + "/result") -Headers $authH }
+    catch { return $op }
   }
   elseif ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 300) {
     if ($resp.Content) { return ($resp.Content | ConvertFrom-Json) } else { return $null }
@@ -154,26 +153,40 @@ function Filter-Excluded($items, $exclude){
   return $kept
 }
 
-# ---- Load source stage items and keep only deployable ones (with valid GUID) ----
-$stageItems = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
-$stageItems = $stageItems | Where-Object {
-  $_.PSObject.Properties.Name -contains "sourceItemId" -and
-  $_.sourceItemId -and
-  ($_.sourceItemId -match '^[0-9a-fA-F-]{36}$')
+# ---- Load items from **SOURCE** stage and coalesce to a usable sourceItemId ----
+$raw = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
+
+# Prepare list: sourceItemId := (sourceItemId ?? itemId) for source stage items
+$stageItems = @()
+foreach($it in $raw){
+  $sid = $null
+  if ($it.PSObject.Properties.Name -contains "sourceItemId" -and $it.sourceItemId) { $sid = $it.sourceItemId }
+  else { $sid = $it.itemId }  # fallback for source stage
+  if ($sid -and ($sid -match '^[0-9a-fA-F-]{36}$')) {
+    $stageItems += [pscustomobject]@{
+      itemDisplayName = $it.itemDisplayName
+      itemType        = $it.itemType
+      sourceItemId    = $sid
+    }
+  } else {
+    Write-Host "Skipping (no valid id): $($it.itemDisplayName) [$($it.itemType)]"
+  }
+}
+
+if (-not $stageItems) {
+  throw "No deployable items found in source stage after id coalescing."
 }
 
 # ---- Build items list ----
+$itemsToSend = @()
 if ($ItemsJson -and $ItemsJson.Trim()){
   $wanted = $ItemsJson | ConvertFrom-Json
-
-  $itemsToSend = @()
   foreach($w in $wanted){
     if ($w.PSObject.Properties.Name -contains "sourceItemId" -and $w.sourceItemId -match '^[0-9a-fA-F-]{36}$'){
-      # caller supplied an explicit id
       $itemsToSend += @{
         sourceItemId     = $w.sourceItemId
         itemType         = $w.itemType
-        itemDisplayName  = $w.itemDisplayName
+        itemDisplayName  = ($w.itemDisplayName ?? $w.sourceItemId)
       }
     } else {
       if (-not ($w.PSObject.Properties.Name -contains "itemDisplayName")) {
@@ -183,7 +196,7 @@ if ($ItemsJson -and $ItemsJson.Trim()){
         $_.itemDisplayName -eq $w.itemDisplayName -and $_.itemType -eq $w.itemType
       }
       if (-not $match) {
-        throw "Item not found or not deployable from source stage: '$($w.itemDisplayName)' [$($w.itemType)]."
+        throw "Item not found in source stage: '$($w.itemDisplayName)' [$($w.itemType)]."
       }
       $itemsToSend += @{
         sourceItemId     = $match.sourceItemId
@@ -192,23 +205,16 @@ if ($ItemsJson -and $ItemsJson.Trim()){
       }
     }
   }
-}
-else {
-  # Deploy “everything” that is deployable (has sourceItemId), minus excludes
-  $itemsToSend = $stageItems | ForEach-Object {
-    @{
-      sourceItemId     = $_.sourceItemId
-      itemType         = $_.itemType
-      itemDisplayName  = $_.itemDisplayName
-    }
-  }
+} else {
+  # Deploy everything from source, then exclude unwanted types
+  $itemsToSend = $stageItems
 }
 
-# Exclude unwanted types (e.g., Warehouse) AFTER null-id filtering
+# Apply excludes (e.g., Warehouse)
 $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
 
 if (-not $itemsToSend) {
-  throw "After filtering items without sourceItemId and applying exclusions, no items remain to deploy."
+  throw "After exclusions, no items remain to deploy."
 }
 
 Write-Host "Items to deploy:"

@@ -1,3 +1,12 @@
+<#
+Deploy Dev → Prod for a Fabric deployment pipeline using **stage names**.
+- Resolves pipeline & stages by DISPLAY NAME (no GUIDs needed).
+- Skips any stage items that lack a valid sourceItemId (GUID).
+- Default-excludes Warehouses (SPNs aren’t supported for DW deploy via API).
+- Optional -ItemsJson to do selective deploy by displayName or sourceItemId.
+- Polls the Long Running Operation (LRO) until Succeeded.
+#>
+
 param(
   [Parameter(Mandatory=$true)][string]$TenantId,
   [Parameter(Mandatory=$true)][string]$ClientId,
@@ -15,7 +24,17 @@ param(
 
   [string]$Note = "CI/CD deploy via GitHub Actions",
 
-
+  # Optional selective deploy list (JSON). Leave empty to deploy “everything” (minus excluded types).
+  # Example JSON you can pass from the workflow input:
+  # [
+  #   {"itemDisplayName":"PLclaims_bronze","itemType":"DataPipeline"},
+  #   {"itemDisplayName":"PLclaims_silver","itemType":"DataPipeline"},
+  #   {"itemDisplayName":"PLclaims_gold","itemType":"DataPipeline"},
+  #   {"itemDisplayName":"NBclaims_bronze","itemType":"Notebook"},
+  #   {"itemDisplayName":"NBclaims_silver","itemType":"Notebook"},
+  #   {"itemDisplayName":"Claims Semantic Model","itemType":"SemanticModel"},
+  #   {"itemDisplayName":"Claims Report","itemType":"Report"}
+  # ]
   [string]$ItemsJson = "",
 
   # Default-exclude Warehouses to avoid PrincipalTypeNotSupported with SPNs
@@ -48,7 +67,7 @@ function PostLro($uri, $obj) {
   $json = $obj | ConvertTo-Json -Depth 20
   $resp = Invoke-WebRequest -Method POST -Uri $uri -Headers ($authH + @{ "Content-Type"="application/json" }) -Body $json -MaximumRedirection 0
 
-  # LRO pattern
+  # Long Running Operation pattern
   $opUrl = $resp.Headers["Operation-Location"]
   if (-not $opUrl) { $opUrl = $resp.Headers["operation-location"] }
   if (-not $opUrl) { $opUrl = $resp.Headers["Location"] }
@@ -58,7 +77,7 @@ function PostLro($uri, $obj) {
       Start-Sleep -Seconds 5
       $op = Invoke-RestMethod -Method GET -Uri $opUrl -Headers $authH
       $pct = if ($op.PSObject.Properties.Name -contains "percentComplete") { $op.percentComplete } else { "" }
-      Write-Host ("Deployment status: {0} {1}" -f $op.status, (if($pct -ne ""){"($pct%)"}else{""}))
+      Write-Host ("Deployment status: {0} {1}" -f $op.status, ($pct ? "($pct%)" : ""))
     } while ($op.status -in @("NotStarted","Running"))
 
     if ($op.status -ne "Succeeded") {
@@ -135,52 +154,72 @@ function Filter-Excluded($items, $exclude){
   return $kept
 }
 
+# ---- Load source stage items and keep only deployable ones (with valid GUID) ----
+$stageItems = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
+$stageItems = $stageItems | Where-Object {
+  $_.PSObject.Properties.Name -contains "sourceItemId" -and
+  $_.sourceItemId -and
+  ($_.sourceItemId -match '^[0-9a-fA-F-]{36}$')
+}
+
 # ---- Build items list ----
 if ($ItemsJson -and $ItemsJson.Trim()){
   $wanted = $ItemsJson | ConvertFrom-Json
-  $stageItems = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
 
   $itemsToSend = @()
   foreach($w in $wanted){
     if ($w.PSObject.Properties.Name -contains "sourceItemId" -and $w.sourceItemId -match '^[0-9a-fA-F-]{36}$'){
-      $itemsToSend += @{ sourceItemId = $w.sourceItemId; itemType = $w.itemType; itemDisplayName = $w.itemDisplayName }
+      # caller supplied an explicit id
+      $itemsToSend += @{
+        sourceItemId     = $w.sourceItemId
+        itemType         = $w.itemType
+        itemDisplayName  = $w.itemDisplayName
+      }
     } else {
       if (-not ($w.PSObject.Properties.Name -contains "itemDisplayName")) {
-        throw "Each item must have 'sourceItemId' or 'itemDisplayName'. Offending entry: $($w | ConvertTo-Json -Compress)"
+        throw "Each item must have 'sourceItemId' or 'itemDisplayName'. Offending: $($w | ConvertTo-Json -Compress)"
       }
-      $match = $stageItems | Where-Object { $_.itemDisplayName -eq $w.itemDisplayName -and $_.itemType -eq $w.itemType }
-      if (-not $match) { throw "Item not found in source stage: '$($w.itemDisplayName)' [$($w.itemType)]." }
-      $itemsToSend += @{ sourceItemId = $match.sourceItemId; itemType = $match.itemType; itemDisplayName = $match.itemDisplayName }
+      $match = $stageItems | Where-Object {
+        $_.itemDisplayName -eq $w.itemDisplayName -and $_.itemType -eq $w.itemType
+      }
+      if (-not $match) {
+        throw "Item not found or not deployable from source stage: '$($w.itemDisplayName)' [$($w.itemType)]."
+      }
+      $itemsToSend += @{
+        sourceItemId     = $match.sourceItemId
+        itemType         = $match.itemType
+        itemDisplayName  = $match.itemDisplayName
+      }
     }
   }
-
-  $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
-  if(-not $itemsToSend){ throw "All requested items were excluded. Nothing to deploy." }
-
-  Write-Host "Items to deploy:"
-  foreach($i in $itemsToSend){ Write-Host " - $($i.itemDisplayName) [$($i.itemType)]" }
-
-  # Strip display name for API body
-  $body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType } }
 }
 else {
-  # Deploy “everything” from source stage minus excluded types
-  $stageItems = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
+  # Deploy “everything” that is deployable (has sourceItemId), minus excludes
   $itemsToSend = $stageItems | ForEach-Object {
-    @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType; itemDisplayName = $_.itemDisplayName }
+    @{
+      sourceItemId     = $_.sourceItemId
+      itemType         = $_.itemType
+      itemDisplayName  = $_.itemDisplayName
+    }
   }
-  $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
-  if(-not $itemsToSend){ throw "After exclusions, no items remain to deploy." }
-
-  Write-Host "Items to deploy:"
-  foreach($i in $itemsToSend){ Write-Host " - $($i.itemDisplayName) [$($i.itemType)]" }
-
-  $body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType } }
 }
+
+# Exclude unwanted types (e.g., Warehouse) AFTER null-id filtering
+$itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
+
+if (-not $itemsToSend) {
+  throw "After filtering items without sourceItemId and applying exclusions, no items remain to deploy."
+}
+
+Write-Host "Items to deploy:"
+foreach($i in $itemsToSend){ Write-Host " - $($i.itemDisplayName) [$($i.itemType)]" }
+
+# Final body expects only id + type
+$body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType } }
 
 # ---- Kick off deployment ----
 $deployUri = "$base/deploymentPipelines/$pipeId/deploy"
 $result = PostLro $deployUri $body
 
-Write-Host "✅ Deployment Succeeded."
+Write-Host "Deployment Succeeded."
 if ($result) { $result | ConvertTo-Json -Depth 20 }

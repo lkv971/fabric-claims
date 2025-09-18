@@ -1,12 +1,12 @@
 <#
 Deploy Dev → Prod using Fabric Deployment Pipeline REST API (stage NAMES).
 
-Hardening added:
-- Ensure all URIs are strings (defensive cast) and log their type/value.
-- Throw if pipeline or stage name resolves to multiple matches.
-- Headers built as a single hashtable (no + concatenation).
-- Coalesce item ids and filter out null ids.
-- Default exclude Warehouses (can override).
+Hardening:
+- Ensure all URIs are strings and log them.
+- Throw on ambiguous pipeline/stage names.
+- Coalesce item ids (sourceItemId/itemId) and filter nulls.
+- Default-exclude Warehouse, VariableLibrary, DataPipelineTrigger.
+- When LRO fails, fetch and print detailed error from multiple places.
 #>
 
 param(
@@ -14,7 +14,7 @@ param(
   [Parameter(Mandatory=$true)][string]$ClientId,
   [Parameter(Mandatory=$true)][string]$ClientSecret,
 
-  # You may provide either PipelineId OR PipelineName. Name will be used if Id is empty.
+  # Provide PipelineId OR PipelineName (name used if id empty).
   [string]$PipelineId = "",
   [Parameter(Mandatory=$false)][string]$PipelineName = "",
 
@@ -26,11 +26,11 @@ param(
 
   [string]$Note = "CI/CD deploy via GitHub Actions",
 
-  # Optional selective deploy JSON (see examples in prior messages)
+  # Optional selective deploy JSON (array of objects with itemDisplayName/itemType or sourceItemId/itemType)
   [string]$ItemsJson = "",
 
-  # Default excludes
-  [string[]]$ExcludeItemTypes = @("Warehouse")
+  # Default excludes (override with -ExcludeItemTypes @() if needed)
+  [string[]]$ExcludeItemTypes = @("Warehouse","VariableLibrary","DataPipelineTrigger")
 )
 
 Set-StrictMode -Version Latest
@@ -51,14 +51,13 @@ function Get-FabricToken {
     scope         = "https://api.fabric.microsoft.com/.default"
     grant_type    = "client_credentials"
   }
-  $uri = "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token"
-  $uri = Ensure-String $uri
+  $uri = Ensure-String "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token"
   Write-Host "DEBUG: Token URI type: $($uri.GetType().FullName) value: $uri"
   (Invoke-RestMethod -Method POST -Uri $uri -Body $body -ContentType "application/x-www-form-urlencoded").access_token
 }
 
 $token = Get-FabricToken $TenantId $ClientId $ClientSecret
-$authH = @{ Authorization = "Bearer $token" }
+$authH = @{ Authorization = "Bearer $token"; Accept = "application/json" }
 
 function New-JsonHeaders([hashtable]$baseHeaders) {
   $h = @{}
@@ -73,7 +72,24 @@ function GetJson([string]$uri) {
   Invoke-RestMethod -Headers $authH -Uri $uri -Method GET
 }
 
-function PostLro([string]$uri, [object]$obj) {
+function TryGetRawString($uri) {
+  try {
+    $resp = Invoke-WebRequest -Headers $authH -Uri $uri -Method GET
+    return $resp.Content
+  } catch {
+    try {
+      # If there is a response body on error, surface it
+      $er = $_.Exception
+      if ($er.Response -and $er.Response.GetResponseStream) {
+        $reader = New-Object System.IO.StreamReader($er.Response.GetResponseStream())
+        return $reader.ReadToEnd()
+      }
+    } catch {}
+    return ""
+  }
+}
+
+function PostLro([string]$uri, [object]$obj, [string]$pipelineIdForAltQueries) {
   $uri     = Ensure-String $uri
   $headers = New-JsonHeaders $authH
   $json    = $obj | ConvertTo-Json -Depth 20
@@ -83,7 +99,7 @@ function PostLro([string]$uri, [object]$obj) {
 
   $resp = Invoke-WebRequest -Method POST -Uri $uri -Headers $headers -Body $json -MaximumRedirection 0
 
-  # LRO link
+  # LRO link (cluster domain)
   $opUrl = $resp.Headers["Operation-Location"]
   if (-not $opUrl) { $opUrl = $resp.Headers["operation-location"] }
   if (-not $opUrl) { $opUrl = $resp.Headers["Location"] }
@@ -99,12 +115,28 @@ function PostLro([string]$uri, [object]$obj) {
     } while ($op.status -in @("NotStarted","Running"))
 
     if ($op.status -ne "Succeeded") {
-      try {
-        $res = Invoke-RestMethod -Method GET -Uri ($opUrl.TrimEnd('/') + "/result") -Headers $authH
-        throw "Deployment failed. Status: $($op.status). Details:`n$(($res | ConvertTo-Json -Depth 20))"
-      } catch {
-        throw "Deployment failed. Status: $($op.status)."
+      # Try to fetch result/details from cluster LRO endpoint
+      $clusterResult = TryGetRawString ($opUrl.TrimEnd('/') + "/result")
+
+      # Also try API-side operations endpoints if we can extract an operation id
+      $opId = $null
+      if ($op.PSObject.Properties.Name -contains "id") { $opId = $op.id }
+      if (-not $opId) {
+        if ($opUrl -match "/operations/([0-9a-fA-F-]{36})") { $opId = $Matches[1] }
       }
+
+      $apiOp = ""; $apiOpResult = ""
+      if ($opId) {
+        $apiOp       = TryGetRawString ("$base/deploymentPipelines/$pipelineIdForAltQueries/operations/$opId")
+        $apiOpResult = TryGetRawString ("$base/deploymentPipelines/$pipelineIdForAltQueries/operations/$opId/result")
+      }
+
+      $msg = @()
+      $msg += "Deployment failed. Status: $($op.status)."
+      if ($clusterResult) { $msg += "Cluster /result payload:`n$clusterResult" }
+      if ($apiOp)         { $msg += "API op state:`n$apiOp" }
+      if ($apiOpResult)   { $msg += "API op result:`n$apiOpResult" }
+      throw ($msg -join "`n`n")
     }
 
     try { return Invoke-RestMethod -Method GET -Uri ($opUrl.TrimEnd('/') + "/result") -Headers $authH }
@@ -121,8 +153,7 @@ function PostLro([string]$uri, [object]$obj) {
 # --------- Resolve pipeline
 $pipeId = $PipelineId
 if (-not $pipeId) {
-  $uList = "$base/deploymentPipelines"
-  $all = (GetJson $uList).value
+  $all = (GetJson "$base/deploymentPipelines").value
   if (-not $all) { throw "No deployment pipelines visible to the service principal." }
   $targetName = ($PipelineName ?? "").Trim()
 
@@ -133,8 +164,7 @@ if (-not $pipeId) {
     throw "Deployment pipeline '$PipelineName' not found."
   }
   if (@($matches).Count -gt 1) {
-    Write-Host "Multiple pipelines matched name '$PipelineName':"
-    foreach($m in $matches){ Write-Host " - $($m.displayName) [$($m.id)]" }
+    foreach($m in $matches){ Write-Host "Duplicate pipeline: $($m.displayName) [$($m.id)]" }
     throw "Ambiguous pipeline name. Please pass -PipelineId."
   }
 
@@ -142,30 +172,19 @@ if (-not $pipeId) {
   $pipeId = Ensure-String $pipe.id
   Write-Host "Pipeline: $($pipe.displayName) [$pipeId]"
 } else {
-  $uPipe = "$base/deploymentPipelines/$pipeId"
-  $uPipe = Ensure-String $uPipe
-  $pipe  = GetJson $uPipe
+  $pipe = GetJson "$base/deploymentPipelines/$pipeId"
   Write-Host "Pipeline: $($pipe.displayName) [$pipeId]"
 }
 
-# --------- Resolve stages by NAME (ensure single match)
-$uStages = "$base/deploymentPipelines/$pipeId/stages"
-$stages  = (GetJson $uStages).value
-
+# --------- Resolve stages by NAME
+$stages = (GetJson "$base/deploymentPipelines/$pipeId/stages").value
 $srcMatches = $stages | Where-Object { (($_.displayName ?? "").Trim()) -ieq $SourceStage.Trim() }
 $dstMatches = $stages | Where-Object { (($_.displayName ?? "").Trim()) -ieq $TargetStage.Trim() }
 
 if (-not $srcMatches) { throw "Source stage '$SourceStage' not found in pipeline '$($pipe.displayName)'." }
 if (-not $dstMatches) { throw "Target stage '$TargetStage' not found in pipeline '$($pipe.displayName)'." }
-
-if (@($srcMatches).Count -gt 1) {
-  foreach($m in $srcMatches){ Write-Host "Duplicate source stage: $($m.displayName) [$($m.id)]" }
-  throw "Ambiguous SourceStage name. Make sure it's unique."
-}
-if (@($dstMatches).Count -gt 1) {
-  foreach($m in $dstMatches){ Write-Host "Duplicate target stage: $($m.displayName) [$($m.id)]" }
-  throw "Ambiguous TargetStage name. Make sure it's unique."
-}
+if (@($srcMatches).Count -gt 1) { throw "Ambiguous SourceStage name. Make sure it's unique." }
+if (@($dstMatches).Count -gt 1) { throw "Ambiguous TargetStage name. Make sure it's unique." }
 
 $src = $srcMatches
 $dst = $dstMatches
@@ -197,17 +216,14 @@ function Filter-Excluded($items, $exclude){
 }
 
 # --------- Load items in source stage, coalesce ids
-$uItemsSrc = "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items"
-$raw = (GetJson $uItemsSrc).value
+$raw = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
 
 $stageItems = @()
 foreach($it in $raw){
   $sid = $null
-  if ($it.PSObject.Properties.Name -contains "sourceItemId" -and $it.sourceItemId) {
-    $sid = $it.sourceItemId
-  } elseif ($it.PSObject.Properties.Name -contains "itemId" -and $it.itemId) {
-    $sid = $it.itemId
-  }
+  if ($it.PSObject.Properties.Name -contains "sourceItemId" -and $it.sourceItemId) { $sid = $it.sourceItemId }
+  elseif ($it.PSObject.Properties.Name -contains "itemId"      -and $it.itemId)      { $sid = $it.itemId }
+
   if ($sid -and ($sid -match '^[0-9a-fA-F-]{36}$')) {
     $stageItems += [pscustomobject]@{
       itemDisplayName = $it.itemDisplayName
@@ -255,7 +271,7 @@ if ($ItemsJson -and $ItemsJson.Trim()){
   $itemsToSend = $stageItems
 }
 
-# Exclude unwanted types (e.g., Warehouse) AFTER id filtering
+# Exclude unwanted types (Warehouse, VariableLibrary, Triggers) AFTER id filtering
 $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
 if (-not $itemsToSend) { throw "After exclusions, no items remain to deploy." }
 
@@ -268,7 +284,7 @@ $body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId;
 # --------- Kick off deployment
 $deployUri = [string]::Concat($base, "/deploymentPipelines/", (Ensure-String $pipeId), "/deploy")
 Write-Host "Deploy URI: $deployUri"
-$result = PostLro $deployUri $body
+$result = PostLro $deployUri $body $pipeId
 
 Write-Host "✅ Deployment Succeeded."
 if ($result) { $result | ConvertTo-Json -Depth 20 }

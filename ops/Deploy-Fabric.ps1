@@ -1,18 +1,25 @@
-Param(
+param(
   [Parameter(Mandatory=$true)][string]$TenantId,
   [Parameter(Mandatory=$true)][string]$ClientId,
   [Parameter(Mandatory=$true)][string]$ClientSecret,
 
-  [Parameter(Mandatory=$true)][string]$PipelineName,
+  # You may provide either PipelineId OR PipelineName. Name will be used if Id is empty.
+  [string]$PipelineId = "",
+  [Parameter(Mandatory=$false)][string]$PipelineName = "",
+
+  [Alias('SourceStageName')]
   [string]$SourceStage = "Development",
+
+  [Alias('TargetStageName')]
   [string]$TargetStage = "Production",
+
   [string]$Note = "CI/CD deploy via GitHub Actions",
 
-  # Optional selective deploy list. Either:
-  #   [{"itemDisplayName":"PLclaims_master","itemType":"DataPipeline"}, ...]
-  # OR
-  #   [{"sourceItemId":"<GUID>","itemType":"DataPipeline"}, ...]
-  [string]$ItemsJson = ""
+
+  [string]$ItemsJson = "",
+
+  # Default-exclude Warehouses to avoid PrincipalTypeNotSupported with SPNs
+  [string[]]$ExcludeItemTypes = @("Warehouse")
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,69 +33,86 @@ function Get-FabricToken {
     scope         = "https://api.fabric.microsoft.com/.default"
     grant_type    = "client_credentials"
   }
-  $resp = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Body $body
-  return $resp.access_token
+  (Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" `
+    -Body $body -ContentType "application/x-www-form-urlencoded").access_token
 }
 
-$token = Get-FabricToken -TenantId $TenantId -ClientId $ClientId -ClientSecret $ClientSecret
+$token = Get-FabricToken $TenantId $ClientId $ClientSecret
 $authH = @{ Authorization = "Bearer $token" }
 
 function GetJson($uri) {
-  (Invoke-RestMethod -Method GET -Uri $uri -Headers $authH)
+  Invoke-RestMethod -Headers $authH -Uri $uri -Method GET
 }
 
-function PostLro($uri, $bodyObj) {
-  $json = $bodyObj | ConvertTo-Json -Depth 10
-  $resp = Invoke-WebRequest -Method POST -Uri $uri -Headers ($authH + @{ "Content-Type"="application/json" }) -Body $json -MaximumRedirection 0 -ErrorAction Stop
-  if ($resp.StatusCode -eq 202) {
-    $opUrl = $resp.Headers["Location"]
-    if (-not $opUrl) { throw "202 Accepted but no Location header returned." }
+function PostLro($uri, $obj) {
+  $json = $obj | ConvertTo-Json -Depth 20
+  $resp = Invoke-WebRequest -Method POST -Uri $uri -Headers ($authH + @{ "Content-Type"="application/json" }) -Body $json -MaximumRedirection 0
 
+  # LRO pattern
+  $opUrl = $resp.Headers["Operation-Location"]
+  if (-not $opUrl) { $opUrl = $resp.Headers["operation-location"] }
+  if (-not $opUrl) { $opUrl = $resp.Headers["Location"] }
+
+  if ($resp.StatusCode -eq 202 -and $opUrl) {
     do {
       Start-Sleep -Seconds 5
       $op = Invoke-RestMethod -Method GET -Uri $opUrl -Headers $authH
-      Write-Host "Deployment status: $($op.status) ($($op.percentComplete)%)"
-    } while ($op.status -eq "Running" -or $op.status -eq "NotStarted")
+      $pct = if ($op.PSObject.Properties.Name -contains "percentComplete") { $op.percentComplete } else { "" }
+      Write-Host ("Deployment status: {0} {1}" -f $op.status, (if($pct -ne ""){"($pct%)"}else{""}))
+    } while ($op.status -in @("NotStarted","Running"))
 
     if ($op.status -ne "Succeeded") {
-      # Try to fetch result for error details
       try {
         $res = Invoke-RestMethod -Method GET -Uri ($opUrl.TrimEnd('/') + "/result") -Headers $authH
-        throw "Deployment failed. Status: $($op.status). Details: $(($res | ConvertTo-Json -Depth 10))"
+        throw "Deployment failed. Status: $($op.status). Details:`n$(($res | ConvertTo-Json -Depth 20))"
       } catch {
         throw "Deployment failed. Status: $($op.status)."
       }
     }
 
-    # Success – try to grab the result doc if available
     try {
       return Invoke-RestMethod -Method GET -Uri ($opUrl.TrimEnd('/') + "/result") -Headers $authH
     } catch {
       return $op
     }
-  } else {
-    # Some endpoints return 200 with a payload
-    return $resp.Content | ConvertFrom-Json
+  }
+  elseif ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 300) {
+    if ($resp.Content) { return ($resp.Content | ConvertFrom-Json) } else { return $null }
+  }
+  else {
+    throw "Unexpected response: HTTP $($resp.StatusCode) $($resp.StatusDescription) — $($resp.Content)"
   }
 }
 
-# 1) Find the deployment pipeline by name
-$pipes = GetJson "$base/deploymentPipelines"
-$pipe  = $pipes.value | Where-Object { $_.displayName -eq $PipelineName }
-if (-not $pipe) { throw "Deployment pipeline '$PipelineName' not found." }
+# ---- Resolve pipeline ----
+$pipeId = $PipelineId
+if (-not $pipeId) {
+  $all = (GetJson "$base/deploymentPipelines").value
+  if (-not $all) { throw "No deployment pipelines visible to the service principal." }
+  $targetName = ($PipelineName ?? "").Trim()
+  $pipe = $all | Where-Object { (($_.displayName ?? "")).Trim() -ieq $targetName }
+  if (-not $pipe) {
+    Write-Host "Pipelines visible to SPN:"
+    foreach($p in $all){ Write-Host " - $($p.displayName) [$($p.id)]" }
+    throw "Deployment pipeline '$PipelineName' not found."
+  }
+  $pipeId = $pipe.id
+  Write-Host "Pipeline: $($pipe.displayName) [$pipeId]"
+} else {
+  $pipe = GetJson "$base/deploymentPipelines/$pipeId"
+  Write-Host "Pipeline: $($pipe.displayName) [$pipeId]"
+}
 
-# 2) Get its stages, then pick source/target by display name
-$pipeDetails = GetJson "$base/deploymentPipelines/$($pipe.id)"
-$src = $pipeDetails.stages | Where-Object { $_.displayName -eq $SourceStage }
-$dst = $pipeDetails.stages | Where-Object { $_.displayName -eq $TargetStage }
-if (-not $src) { throw "Source stage '$SourceStage' not found in pipeline '$PipelineName'." }
-if (-not $dst) { throw "Target stage '$TargetStage' not found in pipeline '$PipelineName'." }
-
-Write-Host "Pipeline: $($pipe.displayName) [$($pipe.id)]"
+# ---- Resolve stages by NAME ----
+$stages = (GetJson "$base/deploymentPipelines/$pipeId/stages").value
+$src = $stages | Where-Object { (($_.displayName ?? "").Trim()) -ieq $SourceStage.Trim() }
+$dst = $stages | Where-Object { (($_.displayName ?? "").Trim()) -ieq $TargetStage.Trim() }
+if (-not $src) { throw "Source stage '$SourceStage' not found in pipeline '$($pipe.displayName)'." }
+if (-not $dst) { throw "Target stage '$TargetStage' not found in pipeline '$($pipe.displayName)'." }
 Write-Host "Source stage: $($src.displayName) [$($src.id)]"
 Write-Host "Target stage: $($dst.displayName) [$($dst.id)]"
 
-# 3) Build request body per official API
+# ---- Build request body ----
 $body = @{
   sourceStageId = $src.id
   targetStageId = $dst.id
@@ -99,40 +123,64 @@ $body = @{
   }
 }
 
-# 4) Optional selective deploy (by displayName or by sourceItemId)
-if ($ItemsJson -and $ItemsJson.Trim() -ne "") {
-  $wanted = $ItemsJson | ConvertFrom-Json
-  $itemsToSend = @()
-
-  # Get the source stage items so we can map display names to IDs
-  $stageItems = GetJson "$base/deploymentPipelines/$($pipe.id)/stages/$($src.id)/items"
-  foreach ($w in $wanted) {
-    if ($w.PSObject.Properties.Name -contains "sourceItemId" -and $w.sourceItemId -match '^[0-9a-fA-F-]{36}$') {
-      $itemsToSend += @{ sourceItemId = $w.sourceItemId; itemType = $w.itemType }
+function Filter-Excluded($items, $exclude){
+  $kept = @()
+  foreach($i in $items){
+    if ($exclude -contains $i.itemType) {
+      Write-Host "Skipping item due to ExcludeItemTypes: $($i.itemDisplayName ?? $i.sourceItemId) [$($i.itemType)]"
       continue
     }
-
-    if (-not ($w.PSObject.Properties.Name -contains "itemDisplayName")) {
-      throw "Each item must have 'sourceItemId' or 'itemDisplayName'. Offending entry: $($w | ConvertTo-Json -Compress)"
-    }
-
-    $match = $stageItems.value |
-      Where-Object { $_.itemDisplayName -eq $w.itemDisplayName -and $_.itemType -eq $w.itemType }
-
-    if (-not $match) {
-      throw "Item not found in source stage: '$($w.itemDisplayName)' [$($w.itemType)]."
-    }
-
-    # Use sourceItemId from the source stage
-    $itemsToSend += @{ sourceItemId = $match.sourceItemId; itemType = $match.itemType }
+    $kept += $i
   }
-
-  $body.items = $itemsToSend
+  return $kept
 }
 
-# 5) Kick off deployment (correct endpoint)
-$deployUri = "$base/deploymentPipelines/$($pipe.id)/deploy"
-$result = PostLro -Uri $deployUri -Body $body
+# ---- Build items list ----
+if ($ItemsJson -and $ItemsJson.Trim()){
+  $wanted = $ItemsJson | ConvertFrom-Json
+  $stageItems = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
+
+  $itemsToSend = @()
+  foreach($w in $wanted){
+    if ($w.PSObject.Properties.Name -contains "sourceItemId" -and $w.sourceItemId -match '^[0-9a-fA-F-]{36}$'){
+      $itemsToSend += @{ sourceItemId = $w.sourceItemId; itemType = $w.itemType; itemDisplayName = $w.itemDisplayName }
+    } else {
+      if (-not ($w.PSObject.Properties.Name -contains "itemDisplayName")) {
+        throw "Each item must have 'sourceItemId' or 'itemDisplayName'. Offending entry: $($w | ConvertTo-Json -Compress)"
+      }
+      $match = $stageItems | Where-Object { $_.itemDisplayName -eq $w.itemDisplayName -and $_.itemType -eq $w.itemType }
+      if (-not $match) { throw "Item not found in source stage: '$($w.itemDisplayName)' [$($w.itemType)]." }
+      $itemsToSend += @{ sourceItemId = $match.sourceItemId; itemType = $match.itemType; itemDisplayName = $match.itemDisplayName }
+    }
+  }
+
+  $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
+  if(-not $itemsToSend){ throw "All requested items were excluded. Nothing to deploy." }
+
+  Write-Host "Items to deploy:"
+  foreach($i in $itemsToSend){ Write-Host " - $($i.itemDisplayName) [$($i.itemType)]" }
+
+  # Strip display name for API body
+  $body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType } }
+}
+else {
+  # Deploy “everything” from source stage minus excluded types
+  $stageItems = (GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items").value
+  $itemsToSend = $stageItems | ForEach-Object {
+    @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType; itemDisplayName = $_.itemDisplayName }
+  }
+  $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
+  if(-not $itemsToSend){ throw "After exclusions, no items remain to deploy." }
+
+  Write-Host "Items to deploy:"
+  foreach($i in $itemsToSend){ Write-Host " - $($i.itemDisplayName) [$($i.itemType)]" }
+
+  $body.items = $itemsToSend | ForEach-Object { @{ sourceItemId = $_.sourceItemId; itemType = $_.itemType } }
+}
+
+# ---- Kick off deployment ----
+$deployUri = "$base/deploymentPipelines/$pipeId/deploy"
+$result = PostLro $deployUri $body
 
 Write-Host "✅ Deployment Succeeded."
-if ($result) { $result | ConvertTo-Json -Depth 10 }
+if ($result) { $result | ConvertTo-Json -Depth 20 }

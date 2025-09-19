@@ -1,8 +1,9 @@
-<#
+<# 
 Deploy Dev → Prod using Fabric REST:
 - Resolve pipeline + stages by NAME.
-- Try stage-items; if none deployable, FALL BACK to listing items from the source stage workspace.
-- Default excludes: Warehouse, VariableLibrary (change as needed).
+- Prefer stage items; if none deployable, FALL BACK to workspace items.
+- Whitelist supported item types for the Deploy API.
+- Default excludes: Warehouse, VariableLibrary, SQLEndpoint, Dashboard, Dataflow, DataflowGen2.
 - Optional -ItemsJson to deploy a subset by displayName or explicit sourceItemId.
 #>
 
@@ -26,11 +27,15 @@ param(
   [string]$ItemsJson = "",
 
   # Default exclusions; adjust as needed
-  [string[]]$ExcludeItemTypes = @("Warehouse","VariableLibrary")
+  [string[]]$ExcludeItemTypes = @("Warehouse","VariableLibrary","SQLEndpoint","Dashboard","Dataflow","DataflowGen2")
 )
 
 $ErrorActionPreference = "Stop"
 $base = "https://api.fabric.microsoft.com/v1"
+
+# Deploy API-supported item types (workspace item 'type' values that are valid to send to /deploy)
+# You can add/remove types here if your tenant supports more.
+$SupportedTypes = @("Lakehouse","DataPipeline","Notebook","SemanticModel","Report","Warehouse")
 
 function Get-FabricToken {
   param([string]$TenantId,[string]$ClientId,[string]$ClientSecret)
@@ -145,13 +150,12 @@ if (-not $dst) { throw "Target stage '$TargetStage' not found in pipeline '$($pi
 Write-Host "Source stage: $($src.displayName) [$($src.id)]"
 Write-Host "Target stage: $($dst.displayName) [$($dst.id)]"
 
-# Try to read the source workspaceId from the stage (property name varies)
+# Try to read the source workspaceId from the stage
 $srcWsId = $null
 foreach($prop in @("workspaceId","assignedWorkspaceId","workspaceGuid","workspaceObjectId")){
   if ($src.PSObject.Properties.Name -contains $prop -and $src.$prop) { $srcWsId = $src.$prop; break }
 }
 if (-not $srcWsId) {
-  # fetch full stage object (sometimes includes more fields)
   $srcStageObj = GetJson "$base/deploymentPipelines/$pipeId/stages/$($src.id)"
   foreach($prop in @("workspaceId","assignedWorkspaceId","workspaceGuid","workspaceObjectId")){
     if ($srcStageObj.PSObject.Properties.Name -contains $prop -and $srcStageObj.$prop) { $srcWsId = $srcStageObj.$prop; break }
@@ -162,12 +166,15 @@ if (-not $srcWsId) { throw "Could not resolve the source stage workspaceId. Ensu
 # ---- Preferred: stage items (if they include sourceItemId GUIDs)
 $itemsUri = "$base/deploymentPipelines/$pipeId/stages/$($src.id)/items"
 $stageItemsRaw = (GetJson $itemsUri).value
+
+# normalize stage items and keep only SupportedTypes with valid GUIDs
 $stageItems = @()
 if ($stageItemsRaw) {
   $stageItems = $stageItemsRaw | Where-Object {
     $_.PSObject.Properties.Name -contains "sourceItemId" -and
     $_.sourceItemId -and
-    ($_.sourceItemId -match '^[0-9a-fA-F-]{36}$')
+    ($_.sourceItemId -match '^[0-9a-fA-F-]{36}$') -and
+    ($SupportedTypes -contains $_.itemType)
   } | ForEach-Object {
     [pscustomobject]@{
       sourceItemId    = $_.sourceItemId
@@ -184,16 +191,16 @@ if (-not $stageItems -or $stageItems.Count -eq 0) {
   Write-Host "No deployable items from stage endpoint; falling back to workspace items for $srcWsId ..."
   $wsItems = (GetJson "$base/workspaces/$srcWsId/items").value
 
-  # Normalize to the shape expected for the deploy body
-  # Note: workspace items property names are usually: id, displayName, type
+  # Normalize, keep only items whose 'type' is supported, and that have a GUID id
   $stageItems = $wsItems | Where-Object {
     $_.PSObject.Properties.Name -contains "id" -and
     $_.id -and
-    ($_.id -match '^[0-9a-fA-F-]{36}$')
+    ($_.id -match '^[0-9a-fA-F-]{36}$') -and
+    ($SupportedTypes -contains $_.type)
   } | ForEach-Object {
     [pscustomobject]@{
       sourceItemId    = $_.id
-      itemType        = $_.type        # expected to align with Deploy API itemType
+      itemType        = $_.type
       itemDisplayName = $_.displayName
       source          = "workspace"
     }
@@ -209,6 +216,12 @@ if ($ItemsJson -and $ItemsJson.Trim()){
   $wanted = $ItemsJson | ConvertFrom-Json
 
   foreach($w in $wanted){
+    # enforce SupportedTypes even for user-specified list
+    if (-not ($SupportedTypes -contains $w.itemType)) {
+      Write-Host "Skipping requested item '$($w.itemDisplayName)' [$($w.itemType)] — not in SupportedTypes."
+      continue
+    }
+
     if ($w.PSObject.Properties.Name -contains "sourceItemId" -and $w.sourceItemId -match '^[0-9a-fA-F-]{36}$'){
       $itemsToSend += @{
         sourceItemId     = $w.sourceItemId
@@ -223,7 +236,8 @@ if ($ItemsJson -and $ItemsJson.Trim()){
         $_.itemDisplayName -eq $w.itemDisplayName -and $_.itemType -eq $w.itemType
       }
       if (-not $match) {
-        throw "Item not found from $itemsFrom list or not deployable: '$($w.itemDisplayName)' [$($w.itemType)]."
+        Write-Host "Requested item not found in $itemsFrom list or not deployable: '$($w.itemDisplayName)' [$($w.itemType)]. Skipping."
+        continue
       }
       $itemsToSend += @{
         sourceItemId     = $match.sourceItemId
@@ -243,10 +257,11 @@ else {
   }
 }
 
+# Exclude unwanted types AFTER filtering/whitelisting
 $itemsToSend = Filter-Excluded $itemsToSend $ExcludeItemTypes
 
 if (-not $itemsToSend) {
-  throw "After filtering items without IDs and applying exclusions, no items remain to deploy."
+  throw "After filtering to SupportedTypes and applying exclusions, no items remain to deploy."
 }
 
 Write-Host "Items to deploy (from $itemsFrom):"

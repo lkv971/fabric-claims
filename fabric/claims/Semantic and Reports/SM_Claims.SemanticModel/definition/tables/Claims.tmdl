@@ -12,6 +12,7 @@ table Claims
 		changedProperty = DisplayFolder
 
 	measure 'Total Amount' = SUM(Claims[Amount])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
 		displayFolder: Amount Measures
 		lineageTag: 821bbad9-3b71-417f-b07d-a54342777da1
 
@@ -19,7 +20,9 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
 
 	measure 'Unique Patients' = DISTINCTCOUNT(Claims[Patient ID])
 		formatString: 0
@@ -58,6 +61,7 @@ table Claims
 		changedProperty = DisplayFolder
 
 	measure 'Approved Amount' = CALCULATE([Total Amount], Claims[Status] = "Approved")
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
 		displayFolder: Amount Measures
 		lineageTag: 2b8ebce3-8fea-4e1c-84ac-a74276ced3c6
 
@@ -65,9 +69,12 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
 
 	measure 'Denied Amount' = CALCULATE([Total Amount], Claims[Status] = "Denied")
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
 		displayFolder: Amount Measures
 		lineageTag: c8b3679f-f5b6-4312-9bfc-b900ab4e65ee
 
@@ -75,9 +82,12 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
 
 	measure 'Pending Amount' = CALCULATE([Total Amount], Claims[Status] = "Pending")
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
 		displayFolder: Amount Measures
 		lineageTag: cf1af69b-469b-45c5-8b9f-baee5467924a
 
@@ -85,9 +95,12 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
 
 	measure 'Average Amount' = AVERAGE(Claims[Amount])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
 		displayFolder: Amount Measures
 		lineageTag: 20a616ed-d5bd-4c06-a615-883dfcb90da0
 
@@ -95,9 +108,12 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
 
 	measure 'Approval Rate %' = DIVIDE([Approved Claims], [Total Claims])
+		formatString: 0.00%;-0.00%;0.00%
 		displayFolder: Analytics Measures
 		lineageTag: 1c5b7ff0-89d6-41a3-9e07-232f0f8b764b
 
@@ -105,7 +121,7 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
 
 	measure 'Total Amount YTD' = TOTALYTD([Total Amount], Dates[Date])
 		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
@@ -216,6 +232,7 @@ table Claims
 		changedProperty = DisplayFolder
 
 	measure 'Denied Rate %' = DIVIDE([Denied Claims], [Total Claims])
+		formatString: 0.00%;-0.00%;0.00%
 		displayFolder: Analytics Measures
 		lineageTag: c93d0ce2-ea56-4ef7-a5be-e7d94e1c528d
 
@@ -223,9 +240,10 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
 
 	measure 'Pending Rate %' = DIVIDE([Pending Claims], [Total Claims])
+		formatString: 0.00%;-0.00%;0.00%
 		displayFolder: Analytics Measures
 		lineageTag: c07aaaf1-75b6-43b7-981c-d14a0f4bce79
 
@@ -233,7 +251,7 @@ table Claims
 
 		changedProperty = DisplayFolder
 
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		changedProperty = FormatString
 
 	measure 'Unique Providers' = DISTINCTCOUNT(Claims[Provider ID])
 		formatString: 0

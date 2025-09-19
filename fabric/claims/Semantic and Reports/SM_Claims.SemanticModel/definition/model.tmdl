@@ -21,13 +21,3 @@ ref table Claims
 ref table 'Time Calculation'
 ref table 'Claim Status'
 
-ref role Approved
-ref role DenialsWorkqueue
-ref role Inpatient
-ref role OutpatientUrgent
-ref role Last12M
-ref role PaperSubmission
-ref role OnlineSubmission
-ref role HighValueClaims
-ref role AdultsOnly
-

@@ -1,7 +1,0 @@
-role HighValueClaims
-	modelPermission: read
-
-	tablePermission Claims = [Amount] >= 10000
-
-	annotation PBI_Id = 543e06f816ec425c92ea2271cbbc3c99
-

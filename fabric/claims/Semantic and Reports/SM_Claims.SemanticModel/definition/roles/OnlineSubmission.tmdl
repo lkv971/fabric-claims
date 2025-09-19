@@ -1,7 +1,0 @@
-role OnlineSubmission
-	modelPermission: read
-
-	tablePermission Claims = [Submission Method] == "Online"
-
-	annotation PBI_Id = ed46edb37ce944bf93ac90be8d4244da
-

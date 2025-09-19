@@ -1,7 +1,0 @@
-role DenialsWorkqueue
-	modelPermission: read
-
-	tablePermission Claims = [Status] IN {"Denied","Pending"}
-
-	annotation PBI_Id = 05f6db4ee9774bb68c143e6ad78828f7
-

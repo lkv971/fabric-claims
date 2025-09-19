@@ -1,7 +1,0 @@
-role PaperSubmission
-	modelPermission: read
-
-	tablePermission Claims = [Submission Method] == "Paper"
-
-	annotation PBI_Id = 5a5dd188595e402a87d388bee02688ca
-
